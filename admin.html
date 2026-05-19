@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel · Aplicações Mentoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050505;
+    --bg-soft:#0c0c0c;
+    --fg:#fff;
+    --muted:#9a9a9a;
+    --muted-soft:#5a5a5a;
+    --border:#1c1c1c;
+    --border-hover:#2c2c2c;
+    --accent:#ff2a2a;
+    --green:#22c55e;
+    --red:#ff5a5a;
+    --blue:#60a5fa;
+    --chip-bg:rgba(15,15,15,.75);
+    --radius:10px;
+    --radius-lg:14px;
+    --t:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body{display:flex;flex-direction:column;min-height:100vh;position:relative}
+
+  /* Grid background */
+  .bg-grid{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-color:#070707;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 100% 80% at 50% 40%, #000 30%, transparent 100%);
+    -webkit-mask-image:radial-gradient(ellipse 100% 80% at 50% 40%, #000 30%, transparent 100%);
+  }
+
+  /* Topbar */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:rgba(5,5,5,.7);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:1280px;margin:0 auto;padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:16px}
+  .logo{display:flex;flex-direction:column;line-height:.95;font-weight:900;letter-spacing:.5px;font-size:17px}
+  .logo .row{display:flex;align-items:center;gap:6px}
+  .logo .badge{background:var(--accent);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px;font-weight:800;letter-spacing:.3px}
+  .logo .sub{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:1.4px;margin-top:2px;font-family:'JetBrains Mono',monospace}
+  .divider{width:1px;height:28px;background:var(--border)}
+  .panel-title{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:1.8px;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+  .actions-bar{display:flex;align-items:center;gap:8px}
+  .iconbtn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--chip-bg);border:1px solid var(--border);
+    color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;
+    font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:500;
+    letter-spacing:.5px;text-transform:uppercase;
+    transition:all .2s var(--t);
+  }
+  .iconbtn:hover{border-color:var(--border-hover);background:rgba(20,20,20,.85)}
+  .iconbtn svg{width:14px;height:14px}
+  .iconbtn.danger:hover{border-color:rgba(255,90,90,.35);color:var(--red)}
+  .iconbtn.spinning svg{animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Main */
+  main{flex:1;max-width:1280px;width:100%;margin:0 auto;padding:32px 24px 80px}
+
+  /* Auth screen */
+  .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:60vh}
+  .auth{
+    width:100%;max-width:460px;
+    background:var(--chip-bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:32px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .auth h2{font-size:22px;font-weight:700;margin:0 0 8px;letter-spacing:-.3px}
+  .auth .sub{color:var(--muted);font-size:13.5px;margin:0 0 24px;line-height:1.5}
+  .auth label{display:block;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:14px 0 6px;font-family:'JetBrains Mono',monospace}
+  .auth input{
+    width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border);
+    color:#fff;padding:11px 14px;border-radius:8px;font-size:13.5px;
+    font-family:'JetBrains Mono',monospace;outline:none;letter-spacing:.3px;
+    transition:border-color .2s var(--t);
+  }
+  .auth input:focus{border-color:rgba(255,255,255,.35)}
+  .auth .help{font-size:11.5px;color:var(--muted-soft);margin-top:6px;line-height:1.5;font-family:'JetBrains Mono',monospace}
+  .auth .help a{color:var(--blue);text-decoration:none}
+  .auth .help a:hover{text-decoration:underline}
+  .auth-actions{display:flex;gap:10px;margin-top:24px}
+  .btn-primary{
+    background:#fff;color:#000;border:1px solid #fff;padding:11px 22px;
+    border-radius:8px;font-weight:600;font-size:12px;letter-spacing:1px;
+    cursor:pointer;text-transform:uppercase;font-family:'JetBrains Mono',monospace;
+    flex:1;
+    transition:transform .15s,box-shadow .25s,opacity .2s;
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,255,255,.08)}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .stat{
+    background:var(--chip-bg);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    position:relative;overflow:hidden;
+    transition:border-color .2s var(--t);
+  }
+  .stat:hover{border-color:var(--border-hover)}
+  .stat-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+  .stat-value{font-size:36px;font-weight:800;margin-top:10px;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .stat-meta{font-size:11px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px}
+  .stat-meta .chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:2px 8px;border-radius:99px;font-weight:600;
+  }
+  .stat-meta .chip.up{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+  .stat-meta .chip.down{background:rgba(255,90,90,.12);color:var(--red);border:1px solid rgba(255,90,90,.25)}
+  .stat-meta .chip.neutral{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
+  .stat-meta .chip svg{width:11px;height:11px}
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;
+  }
+  .search{
+    flex:1;min-width:200px;position:relative;
+  }
+  .search input{
+    width:100%;background:var(--chip-bg);border:1px solid var(--border);
+    color:#fff;padding:10px 12px 10px 36px;border-radius:8px;font-size:13.5px;
+    font-family:inherit;outline:none;
+    transition:border-color .2s var(--t);
+  }
+  .search input:focus{border-color:rgba(255,255,255,.35)}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted-soft)}
+  .filter{
+    background:var(--chip-bg);border:1px solid var(--border);
+    color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;
+    font-family:'JetBrains Mono',monospace;cursor:pointer;
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2.5' stroke-linecap='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;
+    transition:border-color .2s var(--t);
+  }
+  .filter:focus{border-color:rgba(255,255,255,.35);outline:none}
+
+  /* Table */
+  .table-wrap{
+    background:var(--chip-bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+    overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  table{width:100%;border-collapse:collapse}
+  thead th{
+    text-align:left;font-size:10px;color:var(--muted);font-weight:600;
+    padding:14px 16px;letter-spacing:1.2px;text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace;
+    border-bottom:1px solid var(--border);background:rgba(0,0,0,.25);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:14px 16px;font-size:13.5px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+  }
+  tbody tr{transition:background .15s var(--t);cursor:pointer}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  tbody tr:last-child td{border-bottom:0}
+  .cell-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);white-space:nowrap}
+  .cell-name{font-weight:600;color:#fff}
+  .cell-ig{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue)}
+  .cell-fat{font-family:'JetBrains Mono',monospace;font-size:11.5px}
+  .badge{
+    display:inline-flex;align-items:center;
+    padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:600;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.3px;
+    border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);
+  }
+  .badge.tier-3{background:rgba(34,197,94,.10);color:var(--green);border-color:rgba(34,197,94,.25)}
+  .badge.tier-2{background:rgba(96,165,250,.10);color:var(--blue);border-color:rgba(96,165,250,.25)}
+  .badge.tier-1{background:rgba(255,255,255,.03);color:var(--muted);border-color:var(--border)}
+  .badge.tier-0{background:rgba(255,90,90,.08);color:#ff8a8a;border-color:rgba(255,90,90,.2)}
+
+  .actions-cell{display:flex;gap:6px}
+  .icon-link{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:7px;
+    background:rgba(255,255,255,.04);border:1px solid var(--border);
+    color:#fff;text-decoration:none;
+    transition:all .18s var(--t);
+  }
+  .icon-link:hover{transform:translateY(-1px)}
+  .icon-link.wa{color:#22c55e}
+  .icon-link.wa:hover{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);box-shadow:0 0 0 1px rgba(34,197,94,.15)}
+  .icon-link.ig{color:#e879f9}
+  .icon-link.ig:hover{background:rgba(232,121,249,.10);border-color:rgba(232,121,249,.3)}
+  .icon-link svg{width:14px;height:14px}
+
+  /* Empty / loading */
+  .empty, .loading{
+    text-align:center;padding:60px 24px;color:var(--muted);
+    font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.5px;
+  }
+  .empty svg, .loading svg{width:32px;height:32px;display:block;margin:0 auto 12px;color:var(--muted-soft)}
+  .loading svg{animation:spin 1.2s linear infinite}
+
+  /* Drawer */
+  .drawer-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:90;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    opacity:0;visibility:hidden;transition:opacity .25s var(--t),visibility .25s;
+  }
+  .drawer-backdrop.open{opacity:1;visibility:visible}
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:520px;max-width:92vw;
+    background:#0a0a0a;border-left:1px solid var(--border);z-index:100;
+    transform:translateX(100%);transition:transform .35s var(--t);
+    display:flex;flex-direction:column;
+  }
+  .drawer.open{transform:translateX(0)}
+  .drawer-header{
+    padding:20px 24px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .drawer-header h3{margin:0;font-size:16px;font-weight:700}
+  .drawer-close{
+    background:transparent;border:0;color:var(--muted);cursor:pointer;
+    padding:6px;border-radius:6px;
+    transition:color .2s var(--t),background .2s var(--t);
+  }
+  .drawer-close:hover{color:#fff;background:rgba(255,255,255,.05)}
+  .drawer-close svg{width:18px;height:18px}
+  .drawer-body{flex:1;overflow-y:auto;padding:24px}
+  .drawer-actions{
+    padding:16px 24px;border-top:1px solid var(--border);
+    display:flex;gap:10px;
+  }
+  .drawer-actions .btn-primary{flex:0;padding:11px 18px}
+  .drawer-actions .wa-btn{
+    flex:1;background:#22c55e;color:#000;border-color:#22c55e;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .drawer-actions .wa-btn:hover{background:#16a34a;border-color:#16a34a;box-shadow:0 8px 24px rgba(34,197,94,.25)}
+  .drawer-actions .wa-btn svg{width:16px;height:16px}
+  .drawer dl{margin:0;display:grid;grid-template-columns:1fr;gap:18px}
+  .drawer dt{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:0 0 6px;font-family:'JetBrains Mono',monospace}
+  .drawer dd{margin:0;font-size:14px;color:#fff;line-height:1.55;word-break:break-word}
+  .drawer dd.long{white-space:pre-wrap}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translate(-50%,40px);
+    background:rgba(0,0,0,.9);border:1px solid var(--border);
+    padding:12px 20px;border-radius:8px;font-size:13px;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    opacity:0;visibility:hidden;transition:all .3s var(--t);z-index:200;
+  }
+  .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible}
+  .toast.error{border-color:rgba(255,90,90,.4)}
+
+  /* Tabs */
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0}
+  .tab{
+    background:transparent;border:0;color:var(--muted);
+    padding:12px 18px 14px;font-size:13px;font-weight:600;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;
+    position:relative;display:inline-flex;align-items:center;gap:8px;
+    transition:color .2s var(--t);
+  }
+  .tab:hover{color:#fff}
+  .tab.active{color:#fff}
+  .tab.active::after{
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#fff;
+  }
+  .tab .count{
+    background:rgba(255,255,255,.06);color:#fff;
+    padding:2px 8px;border-radius:99px;font-size:10px;letter-spacing:0;
+  }
+  .tab.active .count{background:rgba(255,255,255,.15)}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+
+  /* Calls table extras */
+  .call-when{display:flex;flex-direction:column;gap:2px}
+  .call-day-chip{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.3px;width:fit-content;
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);
+  }
+  .call-day-chip.today{background:rgba(34,197,94,.12);color:var(--green);border-color:rgba(34,197,94,.3)}
+  .call-day-chip.tomorrow{background:rgba(96,165,250,.12);color:var(--blue);border-color:rgba(96,165,250,.3)}
+  .call-day-chip.overdue{background:rgba(255,90,90,.12);color:var(--red);border-color:rgba(255,90,90,.3)}
+  .call-time{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#fff}
+  .call-actions{display:flex;gap:4px}
+  .call-actions button{
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);
+    width:28px;height:28px;border-radius:6px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:all .15s var(--t);
+  }
+  .call-actions button:hover{color:#fff;border-color:var(--border-hover)}
+  .call-actions button.danger:hover{color:var(--red);border-color:rgba(255,90,90,.35)}
+  .call-actions svg{width:13px;height:13px}
+
+  /* Calendar widget (drawer) */
+  .schedule-section{
+    background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.25);
+    border-radius:var(--radius);padding:14px 16px;margin-top:16px;
+  }
+  .schedule-section.has-call{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.3)}
+  .schedule-section-header{
+    font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1.5px;
+    text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;
+  }
+  .schedule-current{
+    display:flex;align-items:center;gap:10px;margin-bottom:10px;
+    font-size:15px;font-weight:600;color:#fff;font-family:'JetBrains Mono',monospace;
+  }
+  .schedule-current svg{width:18px;height:18px;color:var(--green)}
+  .schedule-form{display:none}
+  .schedule-form.open{display:block;margin-top:14px}
+  .cal{
+    background:rgba(0,0,0,.3);border:1px solid var(--border);
+    border-radius:8px;padding:10px;
+  }
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .cal-month{font-size:11.5px;font-weight:600;letter-spacing:.5px;color:#fff;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+  .cal-nav{display:flex;gap:4px}
+  .cal-nav button{
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;
+    width:22px;height:22px;border-radius:5px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:all .15s var(--t);
+  }
+  .cal-nav button:hover:not(:disabled){border-color:var(--border-hover);background:rgba(255,255,255,.08)}
+  .cal-nav button:disabled{opacity:.3;cursor:not-allowed}
+  .cal-nav svg{width:10px;height:10px}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:3px}
+  .cal-weekdays div{text-align:center;font-size:9px;color:var(--muted-soft);font-weight:600;font-family:'JetBrains Mono',monospace;padding:3px 0}
+  .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+  .cal-day{
+    height:28px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid transparent;color:#fff;
+    border-radius:4px;font-size:11.5px;font-weight:500;cursor:pointer;
+    font-variant-numeric:tabular-nums;position:relative;
+    transition:background .12s var(--t),border-color .12s var(--t);
+  }
+  .cal-day.empty{cursor:default}
+  .cal-day.disabled{color:var(--muted-soft);cursor:not-allowed;opacity:.3}
+  .cal-day:not(.disabled):not(.empty):not(.selected):hover{background:rgba(255,255,255,.08)}
+  .cal-day.selected{background:#fff;color:#000;font-weight:700}
+  .cal-day.has-call::after{
+    content:"";position:absolute;bottom:2px;width:3px;height:3px;border-radius:50%;
+    background:var(--green);
+  }
+  .cal-day.today:not(.selected){color:var(--blue);font-weight:700}
+  .slots-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px}
+  .slot{
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;
+    padding:6px 4px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;text-align:center;
+    transition:all .12s var(--t);
+  }
+  .slot:hover:not(.selected){border-color:var(--border-hover);background:rgba(255,255,255,.08)}
+  .slot.selected{background:#fff;color:#000;border-color:#fff}
+  .schedule-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .schedule-actions .btn-sm{
+    padding:8px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.8px;text-transform:uppercase;
+    transition:all .15s var(--t);
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .schedule-actions .btn-sm svg{width:11px;height:11px}
+  .schedule-actions .save{background:#fff;color:#000;border:1px solid #fff}
+  .schedule-actions .save:hover:not(:disabled){box-shadow:0 6px 18px rgba(255,255,255,.1)}
+  .schedule-actions .save:disabled{opacity:.4;cursor:not-allowed}
+  .schedule-actions .cancel{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  .schedule-actions .cancel:hover{color:#fff;border-color:var(--border-hover)}
+  .schedule-actions .delete{background:transparent;color:var(--red);border:1px solid rgba(255,90,90,.3)}
+  .schedule-actions .delete:hover{background:rgba(255,90,90,.08)}
+  .schedule-actions .gcal{background:transparent;color:var(--blue);border:1px solid rgba(96,165,250,.35);text-decoration:none}
+  .schedule-actions .gcal:hover{background:rgba(96,165,250,.08)}
+  .schedule-actions .ics{background:transparent;color:#fff;border:1px solid var(--border);text-decoration:none}
+  .schedule-actions .ics:hover{border-color:var(--border-hover)}
+
+  /* Dashboard tab */
+  .dash-section{
+    background:var(--chip-bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:24px;margin-bottom:18px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  .dash-section-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;
+  }
+  .dash-section-title{
+    font-size:11px;color:var(--muted);font-weight:600;letter-spacing:2px;
+    text-transform:uppercase;font-family:'JetBrains Mono',monospace;
+  }
+  .dash-section-title::before{content:"> "}
+
+  /* Goal cards (with progress bars) */
+  .goal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .goal-card{
+    background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px;position:relative;overflow:hidden;
+  }
+  .goal-label{
+    font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1.5px;
+    text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .goal-label svg{width:14px;height:14px}
+  .goal-numbers{
+    display:flex;align-items:baseline;gap:6px;margin-bottom:10px;font-variant-numeric:tabular-nums;
+  }
+  .goal-current{font-size:28px;font-weight:800;letter-spacing:-.5px;color:#fff}
+  .goal-target{font-size:14px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .goal-pct{
+    margin-left:auto;font-size:11px;font-weight:700;
+    padding:3px 8px;border-radius:99px;font-family:'JetBrains Mono',monospace;
+  }
+  .goal-pct.low{background:rgba(255,90,90,.12);color:var(--red);border:1px solid rgba(255,90,90,.25)}
+  .goal-pct.mid{background:rgba(255,165,0,.12);color:#ffa500;border:1px solid rgba(255,165,0,.25)}
+  .goal-pct.high{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+  .goal-bar{
+    height:4px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;
+  }
+  .goal-bar-fill{
+    height:100%;border-radius:99px;
+    background:linear-gradient(90deg,#fff,#dee6f5);
+    transition:width .5s var(--t);
+  }
+  .goal-bar-fill.high{background:linear-gradient(90deg,#22c55e,#16a34a)}
+  .goal-bar-fill.mid{background:linear-gradient(90deg,#ffa500,#f97316)}
+  .goal-bar-fill.low{background:linear-gradient(90deg,#ff5a5a,#dc2626)}
+
+  /* Funnel */
+  .funnel{display:flex;flex-direction:column;gap:8px}
+  .funnel-row{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 16px;border-radius:8px;
+    background:rgba(0,0,0,.3);border:1px solid var(--border);
+    transition:all .2s var(--t);
+  }
+  .funnel-row:hover{border-color:var(--border-hover)}
+  .funnel-icon{
+    width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;flex-shrink:0;
+  }
+  .funnel-icon svg{width:16px;height:16px}
+  .funnel-info{flex:1;min-width:0}
+  .funnel-label{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.8px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+  .funnel-bar-wrap{margin-top:8px;height:8px;background:rgba(255,255,255,.04);border-radius:99px;overflow:hidden}
+  .funnel-bar{height:100%;border-radius:99px;transition:width .6s var(--t)}
+  .funnel-stats{text-align:right;flex-shrink:0;min-width:120px}
+  .funnel-count{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.3px;font-variant-numeric:tabular-nums;line-height:1}
+  .funnel-pct{font-size:10.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px}
+  .funnel-pct .drop{color:#ff8a8a}
+
+  /* Conversion summary */
+  .conv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:14px}
+  .conv-card{
+    background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
+  }
+  .conv-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+  .conv-value{font-size:22px;font-weight:800;margin-top:6px;color:#fff;font-variant-numeric:tabular-nums}
+  .conv-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:'JetBrains Mono',monospace}
+
+  /* Goals editor */
+  .goals-editor{display:none;margin-top:18px;padding:18px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:var(--radius)}
+  .goals-editor.open{display:block}
+  .goals-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+  .goal-field label{display:block;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+  .goal-field input{
+    width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border);color:#fff;
+    padding:9px 12px;border-radius:7px;font-size:14px;font-family:'JetBrains Mono',monospace;
+    outline:none;transition:border-color .15s var(--t);
+  }
+  .goal-field input:focus{border-color:rgba(255,255,255,.35)}
+  .goals-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+  /* Period selector for dashboard */
+  .period-pills{display:inline-flex;gap:4px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:99px;padding:3px}
+  .period-pill{
+    background:transparent;border:0;color:var(--muted);padding:6px 14px;border-radius:99px;
+    font-size:11px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;
+    letter-spacing:.5px;text-transform:uppercase;transition:all .2s var(--t);
+  }
+  .period-pill:hover{color:#fff}
+  .period-pill.active{background:#fff;color:#000}
+
+  /* Status badges (drawer) */
+  .status-badges{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  .status-btn{
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;
+    padding:6px 12px;border-radius:99px;font-size:10.5px;font-weight:600;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;
+    transition:all .15s var(--t);
+  }
+  .status-btn:hover{border-color:var(--border-hover)}
+  .status-btn.active{background:#fff;color:#000;border-color:#fff}
+  .status-btn.active.qualified{background:rgba(96,165,250,.2);color:var(--blue);border-color:rgba(96,165,250,.5)}
+  .status-btn.active.client{background:rgba(34,197,94,.2);color:var(--green);border-color:rgba(34,197,94,.5)}
+  .status-btn.active.discarded{background:rgba(255,90,90,.2);color:var(--red);border-color:rgba(255,90,90,.5)}
+
+  /* Status row in lead table */
+  .status-chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;border-radius:99px;font-size:10px;font-weight:600;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
+    background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);
+  }
+  .status-chip.qualified{background:rgba(96,165,250,.10);color:var(--blue);border-color:rgba(96,165,250,.25)}
+  .status-chip.client{background:rgba(34,197,94,.10);color:var(--green);border-color:rgba(34,197,94,.25)}
+  .status-chip.discarded{background:rgba(255,90,90,.08);color:var(--red);border-color:rgba(255,90,90,.2)}
+
+  /* Sale input */
+  .sale-section{margin-top:12px;padding:12px;background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:8px}
+  .sale-section.empty{background:transparent;border-color:var(--border)}
+  .sale-row{display:flex;gap:8px;align-items:center}
+  .sale-row input{
+    flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);color:#fff;
+    padding:8px 10px;border-radius:6px;font-size:13px;font-family:'JetBrains Mono',monospace;outline:none;
+  }
+  .sale-row input:focus{border-color:rgba(34,197,94,.5)}
+
+  /* Settings modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:90;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .2s var(--t),visibility .2s;display:flex;align-items:center;justify-content:center;padding:24px}
+  .modal-backdrop.open{opacity:1;visibility:visible}
+  .modal{
+    background:#0a0a0a;border:1px solid var(--border);border-radius:var(--radius-lg);
+    width:100%;max-width:560px;max-height:88vh;overflow-y:auto;
+    transform:translateY(20px);transition:transform .25s var(--t);
+  }
+  .modal-backdrop.open .modal{transform:translateY(0)}
+  .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .modal-header h3{margin:0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .modal-header h3 svg{width:18px;height:18px;color:var(--blue)}
+  .modal-close{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;transition:color .2s var(--t),background .2s var(--t)}
+  .modal-close:hover{color:#fff;background:rgba(255,255,255,.05)}
+  .modal-close svg{width:18px;height:18px}
+  .modal-body{padding:22px 24px}
+  .modal-section{margin-bottom:20px}
+  .modal-section:last-child{margin-bottom:0}
+  .modal-label{display:block;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+  .modal-input{
+    width:100%;background:rgba(0,0,0,.4);border:1px solid var(--border);color:#fff;
+    padding:10px 12px;border-radius:7px;font-size:13px;font-family:'JetBrains Mono',monospace;
+    outline:none;transition:border-color .15s var(--t);
+  }
+  .modal-input:focus{border-color:rgba(255,255,255,.35)}
+  .modal-help{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:6px;font-family:'JetBrains Mono',monospace}
+  .modal-help a{color:var(--blue);text-decoration:none}
+  .modal-help a:hover{text-decoration:underline}
+  .modal-actions{display:flex;gap:10px;padding:18px 24px;border-top:1px solid var(--border);flex-wrap:wrap}
+  .gcal-status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;margin-bottom:14px}
+  .gcal-status.connected{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+  .gcal-status.disconnected{background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.3);color:#ffa500}
+  .gcal-status svg{width:14px;height:14px}
+  .gcal-code{
+    background:#000;border:1px solid var(--border);border-radius:8px;padding:14px;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.55;color:#e0e0e0;
+    white-space:pre-wrap;overflow-x:auto;max-height:240px;overflow-y:auto;
+  }
+  .copy-btn{
+    background:transparent;border:1px solid var(--border);color:var(--blue);
+    padding:5px 10px;border-radius:5px;font-size:10.5px;font-weight:600;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;
+    transition:all .15s var(--t);float:right;margin-bottom:6px;
+  }
+  .copy-btn:hover{border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.08)}
+  .step-list{counter-reset:s;padding:0;margin:0;list-style:none}
+  .step-list li{counter-increment:s;padding-left:30px;position:relative;margin-bottom:14px;font-size:13px;line-height:1.55;color:#cfcfcf}
+  .step-list li:before{
+    content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;
+    background:rgba(96,165,250,.15);color:var(--blue);font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'JetBrains Mono',monospace;
+  }
+  .step-list a{color:var(--blue);text-decoration:none}
+  .step-list a:hover{text-decoration:underline}
+  .step-list code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+
+  /* Responsive */
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stat-value{font-size:28px}
+    main{padding:24px 16px 60px}
+    .topbar-inner{padding:12px 16px}
+    .hide-mobile{display:none}
+    thead th:nth-child(3), tbody td:nth-child(3),
+    thead th:nth-child(5), tbody td:nth-child(5){display:none}
+  }
+  @media (max-width:560px){
+    .bg-grid{background-size:48px 48px}
+    .stat-value{font-size:24px}
+    .panel-title{font-size:10px}
+    .divider{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="logo">
+        <div class="row">GOAT <span class="badge">11:16-17</span></div>
+        <div class="sub">EXCLUSIVE CLUB</div>
+      </div>
+      <div class="divider"></div>
+      <div class="panel-title" id="panelTitle">PAINEL · APLICAÇÕES</div>
+      <span id="demoBadge" style="display:none;background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.3);padding:3px 9px;border-radius:99px;font-size:9.5px;font-weight:700;letter-spacing:1.5px;font-family:'JetBrains Mono',monospace;text-transform:uppercase">DEMO</span>
+    </div>
+    <div class="actions-bar" id="actionsBar" style="display:none">
+      <button class="iconbtn" id="refreshBtn" title="Atualizar (R)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <span class="hide-mobile">ATUALIZAR</span>
+      </button>
+      <button class="iconbtn" id="settingsBtn" title="Integração Google Agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="hide-mobile">CONFIG</span>
+      </button>
+      <button class="iconbtn danger" id="logoutBtn" title="Sair / trocar token">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="hide-mobile">SAIR</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Auth screen -->
+  <section class="auth-wrap" id="authScreen">
+    <div class="auth">
+      <h2>ACESSO RESTRITO</h2>
+      <p class="sub">Cole seu Personal Access Token do Netlify e o Site ID do site onde o formulário tá hospedado. As credenciais ficam salvas <strong>só neste navegador</strong> — nada vai pra servidor nenhum.</p>
+
+      <label for="patInput">NETLIFY ACCESS TOKEN</label>
+      <input id="patInput" type="password" placeholder="nfp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+      <div class="help">Pegue em <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" rel="noopener">app.netlify.com/user/applications</a> → <em>New access token</em></div>
+
+      <label for="siteIdInput">SITE ID</label>
+      <input id="siteIdInput" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+      <div class="help">Painel do seu site → <em>Site configuration → General → Site information → API ID</em></div>
+
+      <div class="auth-actions">
+        <button class="btn-primary" id="authBtn">ENTRAR</button>
+      </div>
+      <div class="help" id="authError" style="color:#ff8a8a;margin-top:14px;display:none;white-space:pre-wrap;background:rgba(255,90,90,.06);border:1px solid rgba(255,90,90,.25);padding:12px;border-radius:8px;line-height:1.55"></div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
+        <button id="demoBtn" style="background:transparent;border:0;color:var(--blue);font-size:12px;font-family:'JetBrains Mono',monospace;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;text-decoration:underline">VER PAINEL EM MODO DEMO</button>
+        <div class="help" style="margin-top:6px">Sem credenciais, com dados de exemplo. Pra você ver como vai ficar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dashboard" style="display:none">
+    <div class="tabs">
+      <button class="tab active" data-tab="leads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> LEADS <span class="count" id="tabCountLeads">0</span></button>
+      <button class="tab" data-tab="calls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> CALLS <span class="count" id="tabCountCalls">0</span></button>
+      <button class="tab" data-tab="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> DASHBOARD</button>
+    </div>
+
+    <!-- LEADS TAB -->
+    <div class="tab-panel active" data-panel="leads">
+      <div class="stats" id="stats"></div>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="searchInput" type="text" placeholder="Buscar por nome, WhatsApp, Instagram..." />
+        </div>
+        <select class="filter" id="periodFilter">
+          <option value="all">Todos os períodos</option>
+          <option value="today">Hoje</option>
+          <option value="yesterday">Ontem</option>
+          <option value="week">Últimos 7 dias</option>
+          <option value="month">Últimos 30 dias</option>
+        </select>
+        <select class="filter" id="fatFilter">
+          <option value="all">Faturamento — todos</option>
+          <option value="ACIMA DE R$ 20.000">Acima de 20k</option>
+          <option value="R$ 10.000 A R$ 20.000">10k a 20k</option>
+          <option value="R$ 2.000 A R$ 5.000">2k a 5k</option>
+          <option value="ATÉ R$ 2.000">Até 2k</option>
+          <option value="NÃO TÔ FATURANDO AINDA">Não fatura ainda</option>
+        </select>
+        <select class="filter" id="statusFilter">
+          <option value="all">Status — todos</option>
+          <option value="novo">Novo</option>
+          <option value="qualificado">Qualificado</option>
+          <option value="em_conversa">Em conversa</option>
+          <option value="cliente">Cliente</option>
+          <option value="descartado">Descartado</option>
+        </select>
+      </div>
+
+      <div class="table-wrap" id="tableWrap">
+        <div class="loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Carregando aplicações...</div>
+      </div>
+    </div>
+
+    <!-- CALLS TAB -->
+    <div class="tab-panel" data-panel="calls">
+      <div class="stats" id="callsStats"></div>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="callsSearchInput" type="text" placeholder="Buscar por nome ou WhatsApp..." />
+        </div>
+        <select class="filter" id="callsPeriodFilter">
+          <option value="upcoming">Próximas</option>
+          <option value="today">Hoje</option>
+          <option value="week">Próximos 7 dias</option>
+          <option value="overdue">Atrasadas</option>
+          <option value="all">Todas</option>
+        </select>
+      </div>
+
+      <div class="table-wrap" id="callsTableWrap">
+        <div class="loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Carregando calls...</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab-panel" data-panel="dashboard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+        <div class="period-pills" id="dashPeriodPills">
+          <button class="period-pill active" data-period="month">Este mês</button>
+          <button class="period-pill" data-period="30d">Últimos 30d</button>
+          <button class="period-pill" data-period="year">Este ano</button>
+          <button class="period-pill" data-period="all">Todos</button>
+        </div>
+      </div>
+
+      <div class="dash-section">
+        <div class="dash-section-head">
+          <div class="dash-section-title">METAS DO PERÍODO</div>
+          <button class="iconbtn" id="editGoalsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>EDITAR</button>
+        </div>
+        <div class="goal-grid" id="goalGrid"></div>
+        <div class="goals-editor" id="goalsEditor">
+          <div class="goals-fields">
+            <div class="goal-field"><label>LEADS</label><input type="number" id="goalLeads" min="0" placeholder="50" /></div>
+            <div class="goal-field"><label>CALLS AGENDADAS</label><input type="number" id="goalCalls" min="0" placeholder="20" /></div>
+            <div class="goal-field"><label>VENDAS FECHADAS</label><input type="number" id="goalSales" min="0" placeholder="5" /></div>
+            <div class="goal-field"><label>FATURAMENTO (R$)</label><input type="number" id="goalRevenue" min="0" step="100" placeholder="50000" /></div>
+          </div>
+          <div class="goals-actions">
+            <button class="btn-primary" style="flex:0" id="saveGoalsBtn">SALVAR</button>
+            <button class="iconbtn" id="cancelGoalsBtn">CANCELAR</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-section">
+        <div class="dash-section-head">
+          <div class="dash-section-title">FUNIL DE CONVERSÃO</div>
+          <span style="font-size:11px;color:var(--muted-soft);font-family:'JetBrains Mono',monospace" id="funnelPeriodLabel">— período: este mês</span>
+        </div>
+        <div class="funnel" id="funnel"></div>
+        <div class="conv-grid" id="convGrid"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Integração Google Agenda</h3>
+      <button class="modal-close" id="settingsClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="gcal-status disconnected" id="gcalStatus"></div>
+      <div class="modal-section">
+        <label class="modal-label">URL DO APPS SCRIPT (WEBHOOK)</label>
+        <input type="url" class="modal-input" id="gcalUrlInput" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" spellcheck="false" />
+        <div class="modal-help">Cola aqui a URL que você gerou ao publicar o Apps Script como Web App. Sem ela, ao marcar uma call só vai abrir o link manual do Google Agenda.</div>
+      </div>
+      <div class="modal-section">
+        <button class="iconbtn" id="setupGuideBtn" style="display:inline-flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>VER GUIA DE SETUP (5 MIN)</button>
+        <button class="iconbtn" id="gcalTestBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>TESTAR CONEXÃO</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" style="flex:0" id="settingsSaveBtn">SALVAR</button>
+      <button class="iconbtn danger" id="gcalDisconnectBtn" style="display:none">DESCONECTAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup guide modal -->
+<div class="modal-backdrop" id="setupGuideModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Setup Google Agenda em 5 minutos</h3>
+      <button class="modal-close" id="setupGuideClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <ol class="step-list">
+        <li>Acessa <a href="https://script.google.com/home" target="_blank" rel="noopener">script.google.com/home</a> e faz login com a conta Google onde tu quer os eventos.</li>
+        <li>Clica em <strong>Novo projeto</strong>. Vai abrir um editor de código.</li>
+        <li>Apaga o código padrão e cola o script abaixo:
+          <button class="copy-btn" id="copyScriptBtn">COPIAR</button>
+          <pre class="gcal-code" id="appsScriptCode">function doPost(e){
+  try{
+    var data = JSON.parse(e.postData.contents);
+    var cal = CalendarApp.getDefaultCalendar();
+    var start = new Date(data.start);
+    var end = new Date(data.end || (new Date(data.start).getTime() + 60*60*1000));
+    var event = cal.createEvent(data.title || 'Call', start, end, {
+      description: data.description || '',
+      location: data.location || ''
+    });
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      eventId: event.getId(),
+      url: 'https://calendar.google.com/calendar/event?eid=' + Utilities.base64Encode(event.getId() + ' ' + cal.getId()).replace(/=+$/, '')
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch(err){
+    return ContentService.createTextOutput(JSON.stringify({success:false, error:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(){
+  return ContentService.createTextOutput(JSON.stringify({ok:true, message:'GOAT webhook ativo'})).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+        </li>
+        <li>Renomeia o projeto pra <code>GOAT Mentoria - Agenda</code> (canto superior esquerdo).</li>
+        <li>Clica em <strong>Implantar → Nova implantação</strong> (botão azul, canto superior direito).</li>
+        <li>Engrenagem ⚙️ ao lado de "Selecionar tipo" → escolhe <strong>Aplicativo da Web</strong>.</li>
+        <li>Preenche:
+          <ul style="margin-top:6px;padding-left:18px;font-size:12.5px;color:#cfcfcf">
+            <li>Descrição: <code>v1</code></li>
+            <li>Executar como: <strong>Eu (teu email)</strong></li>
+            <li>Quem tem acesso: <strong>Qualquer pessoa</strong></li>
+          </ul>
+        </li>
+        <li>Clica em <strong>Implantar</strong> → Google vai pedir permissões. Aceita tudo (acesso ao teu Google Agenda).</li>
+        <li>Vai aparecer uma <strong>URL do aplicativo da Web</strong> tipo <code>https://script.google.com/macros/s/AKfyc.../exec</code>. <strong>Copia ela.</strong></li>
+        <li>Volta no painel e cola a URL no campo da janela de configuração. Clica em <strong>TESTAR CONEXÃO</strong> pra validar.</li>
+      </ol>
+      <div class="modal-help" style="margin-top:18px;padding:12px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.25);border-radius:8px">
+        💡 Depois de configurado: toda call que você salvar no painel <strong>cria automaticamente</strong> o evento no teu Google Agenda, sem nenhum clique extra.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer for submission details -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3 id="drawerTitle">—</h3>
+    <button class="drawer-close" id="drawerClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-actions" id="drawerActions"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const API = 'https://api.netlify.com/api/v1';
+  const FORM_NAME = 'aplicacao-mentoria';
+  const LS_PAT = 'goat_admin_pat';
+  const LS_SITE = 'goat_admin_site';
+  const LS_FORMID = 'goat_admin_formid';
+  const LS_CALLS = 'goat_admin_calls';
+  const LS_GOALS = 'goat_admin_goals';
+  const LS_LEAD_META = 'goat_admin_lead_meta';
+  const LS_GCAL_URL = 'goat_admin_gcal_url';
+
+  const $ = (s) => document.querySelector(s);
+  const authScreen = $('#authScreen');
+  const dashboard = $('#dashboard');
+  const actionsBar = $('#actionsBar');
+  const refreshBtn = $('#refreshBtn');
+  const logoutBtn = $('#logoutBtn');
+  const patInput = $('#patInput');
+  const siteIdInput = $('#siteIdInput');
+  const authBtn = $('#authBtn');
+  const authError = $('#authError');
+  const searchInput = $('#searchInput');
+  const periodFilter = $('#periodFilter');
+  const fatFilter = $('#fatFilter');
+  const tableWrap = $('#tableWrap');
+  const statsEl = $('#stats');
+  const drawer = $('#drawer');
+  const drawerBackdrop = $('#drawerBackdrop');
+  const drawerClose = $('#drawerClose');
+  const drawerTitle = $('#drawerTitle');
+  const drawerBody = $('#drawerBody');
+  const drawerActions = $('#drawerActions');
+  const toastEl = $('#toast');
+
+  let pat = localStorage.getItem(LS_PAT);
+  let siteId = localStorage.getItem(LS_SITE);
+  let formId = localStorage.getItem(LS_FORMID);
+  let submissions = [];
+  let demoMode = false;
+  let calls = JSON.parse(localStorage.getItem(LS_CALLS) || '{}');
+  let currentTab = 'leads';
+
+  function saveCalls(){
+    localStorage.setItem(LS_CALLS, JSON.stringify(calls));
+  }
+  function getCallForSub(subId){
+    return calls[subId] || null;
+  }
+  function setCall(subId, date, time){
+    calls[subId] = {date, time, updated_at: new Date().toISOString()};
+    saveCalls();
+  }
+  function deleteCall(subId){
+    delete calls[subId];
+    saveCalls();
+  }
+  function callsList(){
+    return Object.keys(calls).map(subId => {
+      var sub = submissions.find(s => String(s.id) === String(subId));
+      if(!sub) return null;
+      var c = calls[subId];
+      var dt = new Date(c.date + 'T' + c.time + ':00');
+      return {subId, sub, call: c, dt};
+    }).filter(Boolean);
+  }
+
+  // ===== Goals storage =====
+  var DEFAULT_GOALS = {leads:50,calls:20,sales:5,revenue:50000};
+  var goals = Object.assign({}, DEFAULT_GOALS, JSON.parse(localStorage.getItem(LS_GOALS) || '{}'));
+  function saveGoals(){localStorage.setItem(LS_GOALS, JSON.stringify(goals))}
+
+  // ===== Lead meta storage (status + sale info) =====
+  // status: 'novo' | 'qualificado' | 'em_conversa' | 'cliente' | 'descartado'
+  var leadMeta = JSON.parse(localStorage.getItem(LS_LEAD_META) || '{}');
+  function saveLeadMeta(){localStorage.setItem(LS_LEAD_META, JSON.stringify(leadMeta))}
+  function getMeta(subId){
+    return leadMeta[subId] || {status:'novo', sale_value:0, sale_date:null};
+  }
+  function setMeta(subId, patch){
+    var current = getMeta(subId);
+    leadMeta[subId] = Object.assign({}, current, patch, {updated_at: new Date().toISOString()});
+    saveLeadMeta();
+  }
+  function parseValor(v){
+    if(!v) return 0;
+    var n = String(v).replace(/[^\d,]/g,'').replace(',','.');
+    return Number(n) || 0;
+  }
+  function fmtBRL(n){
+    return 'R$ ' + Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+  }
+  var STATUS_LABELS = {
+    novo:'NOVO',
+    qualificado:'QUALIFICADO',
+    em_conversa:'EM CONVERSA',
+    cliente:'CLIENTE',
+    descartado:'DESCARTADO'
+  };
+  var STATUS_CSS = {
+    qualificado:'qualified',
+    em_conversa:'qualified',
+    cliente:'client',
+    descartado:'discarded',
+    novo:''
+  };
+
+  // ===== Google Calendar webhook integration =====
+  var gcalUrl = localStorage.getItem(LS_GCAL_URL) || '';
+  function saveGcalUrl(url){
+    if(url) localStorage.setItem(LS_GCAL_URL, url);
+    else localStorage.removeItem(LS_GCAL_URL);
+    gcalUrl = url || '';
+  }
+  async function sendCallToGcal(call, sub){
+    if(!gcalUrl) return null;
+    var d = sub.data || {};
+    var start = new Date(call.date + 'T' + call.time + ':00');
+    var end = new Date(start.getTime() + 60*60*1000);
+    var payload = {
+      title: 'Call - ' + (d.nome || 'Lead'),
+      start: start.toISOString(),
+      end: end.toISOString(),
+      description: 'Lead: ' + (d.nome || '') + (d.whatsapp ? '\nWhatsApp: +55 ' + d.whatsapp : '') + (d.instagram ? '\nInstagram: ' + d.instagram : '') + (d.faturamento ? '\nFaturamento: ' + d.faturamento : '') + (d.valor_investir ? '\nDisponível pra investir: ' + d.valor_investir : '') + (d.motivo ? '\n\nMotivo:\n' + d.motivo : '')
+    };
+    try{
+      // Apps Script aceita text/plain como "simple request" (sem preflight CORS)
+      var body = new Blob([JSON.stringify(payload)], {type:'text/plain'});
+      var res = await fetch(gcalUrl, {
+        method:'POST',
+        body: body,
+        redirect:'follow'
+      });
+      var json = await res.json().catch(()=>null);
+      return json;
+    } catch(e){
+      console.error('Erro ao enviar pro Google Agenda:', e);
+      return {success:false, error:e.toString()};
+    }
+  }
+
+  // ===== Calendar / Call helpers =====
+  function pad(n){return String(n).padStart(2,'0')}
+  function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+  function fmtCallDate(d){return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}
+  function fmtCallDay(d){return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'}).replace(/\./g,'').replace(/^./,c=>c.toUpperCase())}
+  function chipFor(dt){
+    var now=new Date(); var today=startOfDay(now); var tomorrow=new Date(today); tomorrow.setDate(today.getDate()+1);
+    var dayEnd=new Date(today); dayEnd.setDate(today.getDate()+1);
+    if(dt < now) return {cls:'overdue', text:'ATRASADA'};
+    if(dt < dayEnd) return {cls:'today', text:'HOJE'};
+    if(dt < new Date(tomorrow.getTime()+24*60*60*1000)) return {cls:'tomorrow', text:'AMANHÃ'};
+    var days=Math.ceil((dt-today)/(24*60*60*1000));
+    return {cls:'', text:'EM '+days+'D'};
+  }
+  function gcalLink(dt, nome, whatsapp){
+    var end=new Date(dt.getTime()+60*60*1000);
+    function fmt(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z'}
+    var details=encodeURIComponent('Lead: '+(nome||'')+(whatsapp?'\nWhatsApp: +55 '+whatsapp:''));
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Call - '+(nome||'Lead'))+'&dates='+fmt(dt)+'/'+fmt(end)+'&details='+details;
+  }
+  function downloadIcs(dt, nome, whatsapp){
+    var end=new Date(dt.getTime()+60*60*1000);
+    function fmt(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z'}
+    var uid='call-'+dt.getTime()+'@goatexclusive';
+    var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GOAT//Mentoria//PT','BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+fmt(new Date()),'DTSTART:'+fmt(dt),'DTEND:'+fmt(end),'SUMMARY:Call - '+(nome||'Lead'),'DESCRIPTION:Lead: '+(nome||'')+(whatsapp?'\\nWhatsApp: +55 '+whatsapp:''),'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    var blob=new Blob([ics],{type:'text/calendar'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='call-'+dateKey(dt)+'-'+(nome||'lead').replace(/\s+/g,'-').toLowerCase()+'.ics';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
+  // Mini-calendar widget for drawer (returns {render, onChange})
+  function buildCalendar(container, initialDate){
+    var viewMonth=initialDate?new Date(initialDate.getFullYear(),initialDate.getMonth(),1):new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    var selected=initialDate||null;
+    var monthLabel=container.querySelector('.cal-month');
+    var daysEl=container.querySelector('.cal-days');
+    var prev=container.querySelector('.cal-nav button:first-child');
+    var next=container.querySelector('.cal-nav button:last-child');
+    var listeners=[];
+    function render(){
+      var year=viewMonth.getFullYear(), month=viewMonth.getMonth();
+      monthLabel.textContent=viewMonth.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+      var first=new Date(year,month,1).getDay();
+      var lastDay=new Date(year,month+1,0).getDate();
+      var today=startOfDay(new Date());
+      daysEl.innerHTML='';
+      for(var i=0;i<first;i++){var e=document.createElement('div');e.className='cal-day empty';daysEl.appendChild(e)}
+      for(var d=1;d<=lastDay;d++){
+        var dt=new Date(year,month,d);
+        var el=document.createElement('div');el.className='cal-day';el.style.position='relative';el.textContent=d;
+        if(dt < today){el.classList.add('disabled')}
+        if(dateKey(dt)===dateKey(today)){el.classList.add('today')}
+        if(selected && dateKey(dt)===dateKey(selected)){el.classList.add('selected')}
+        if(!el.classList.contains('disabled')){
+          (function(dt){el.addEventListener('click',()=>{selected=dt;render();listeners.forEach(fn=>fn(selected))})})(dt);
+        }
+        daysEl.appendChild(el);
+      }
+      // prev disabled if before current month
+      var currentMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+      prev.disabled = viewMonth <= currentMonth;
+    }
+    prev.addEventListener('click',()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-1,1);render()});
+    next.addEventListener('click',()=>{viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1);render()});
+    render();
+    return {render, onChange:fn=>listeners.push(fn), getSelected:()=>selected, setSelected:d=>{selected=d;render()}};
+  }
+
+  function cleanSiteId(s){
+    if(!s) return '';
+    // Aceita URL, slug, dominio completo ou UUID
+    var cleaned = s.trim()
+      .replace(/^https?:\/\//,'')
+      .replace(/^app\.netlify\.com\/(sites|projects)\//,'')
+      .replace(/\/.*$/,'')
+      .toLowerCase();
+    // Se for slug puro (sem ponto, nao UUID), adiciona .netlify.app
+    if(cleaned && !cleaned.includes('.') && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(cleaned)){
+      cleaned = cleaned + '.netlify.app';
+    }
+    return cleaned;
+  }
+
+  function makeDemoData(){
+    const now = Date.now();
+    const day = 24*60*60*1000;
+    const sample = [
+      {nome:'João Silva Santos', whatsapp:'(11) 98765-4321', instagram:'@joaosilva.oficial', notebook:'SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM', fonte_renda:'Trabalho como gestor de tráfego freelancer há 2 anos. Atualmente tenho 4 clientes fixos rodando.', experiencia_venda:'JÁ FIZ LIVE OU WEBINAR DE VENDA (apresentei produto ao vivo e vendi)', faturamento:'ACIMA DE R$ 20.000', valor_investir:'R$ 15.000', forma_pagamento:'TENHO DISPONÍVEL À VISTA NO PIX', disponibilidade:'3 HORAS A 6 HORAS', motivo:'Quero escalar de R$25k pra R$100k por mês com método validado. Já tentei sozinho e não consegui passar dos 30k.', created_at: new Date(now - 2*60*60*1000).toISOString()},
+      {nome:'Maria Oliveira', whatsapp:'(21) 99876-5432', instagram:'@mariaoliveira', notebook:'SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM', fonte_renda:'Dentista, atendo em clínica particular. Quero migrar pro digital.', experiencia_venda:'JÁ VENDI ALGO ONLINE, MAS NUNCA AO VIVO (página de vendas, DM, grupo, VSL)', faturamento:'R$ 10.000 A R$ 20.000', valor_investir:'R$ 8.000', forma_pagamento:'TENHO DISPONÍVEL PARCELADO NO CARTÃO (ATÉ 12X)', disponibilidade:'1 HORA A 3 HORAS', motivo:'Já fiz curso de outros mentores mas faltava operação real. Quero alguém que tope botar a mão na massa comigo.', created_at: new Date(now - 5*60*60*1000).toISOString()},
+      {nome:'Carlos Eduardo Lima', whatsapp:'(31) 98123-4567', instagram:'@carlosedu.dev', notebook:'SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM', fonte_renda:'Dev fullstack na Stone, salário CLT R$ 18k. Quero saída do CLT.', experiencia_venda:'SIM, JÁ FIZ LANÇAMENTO COMPLETO (com aquecimento e abertura de carrinho)', faturamento:'R$ 10.000 A R$ 20.000', valor_investir:'R$ 20.000', forma_pagamento:'TENHO DISPONÍVEL À VISTA NO PIX', disponibilidade:'+ 6 HORAS', motivo:'Quero construir SaaS próprio e largar o CLT em 12 meses. Tenho stack técnica mas zero traction.', created_at: new Date(now - 8*60*60*1000).toISOString()},
+      {nome:'Beatriz Costa', whatsapp:'(85) 99234-1122', instagram:'@beacosta_oficial', notebook:'TENHO MAS TÁ MEIO VELHO/LENTO', fonte_renda:'Vendo cursos de inglês na própria conta do IG. Faturo uns 4-5k por mês.', experiencia_venda:'JÁ FIZ LIVE OU WEBINAR DE VENDA (apresentei produto ao vivo e vendi)', faturamento:'R$ 2.000 A R$ 5.000', valor_investir:'R$ 5.000', forma_pagamento:'TENHO DISPONÍVEL PARCELADO NO CARTÃO (ATÉ 12X)', disponibilidade:'3 HORAS A 6 HORAS', motivo:'Saturei meu nicho de inglês, quero migrar pra SaaS mas não sei nem por onde começar.', created_at: new Date(now - day).toISOString()},
+      {nome:'Rafael Almeida', whatsapp:'(47) 98765-1111', instagram:'@rafa.almeida', notebook:'SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM', fonte_renda:'Tráfego pago pra dentistas. 6 clientes ativos.', experiencia_venda:'SIM, JÁ FIZ LANÇAMENTO COMPLETO (com aquecimento e abertura de carrinho)', faturamento:'ACIMA DE R$ 20.000', valor_investir:'R$ 30.000', forma_pagamento:'TENHO DISPONÍVEL À VISTA NO PIX', disponibilidade:'3 HORAS A 6 HORAS', motivo:'Quero diversificar receita e parar de depender só do serviço. SaaS é o caminho natural.', created_at: new Date(now - day - 4*60*60*1000).toISOString()},
+      {nome:'Pedro Henrique', whatsapp:'(11) 91234-5678', instagram:'@phenrique', notebook:'TENHO SÓ CELULAR', fonte_renda:'Motorista de aplicativo, faturo uns 3k/mês.', experiencia_venda:'AINDA NÃO VENDI NADA ONLINE (tô começando do zero ou já tentei sem resultado)', faturamento:'ATÉ R$ 2.000', valor_investir:'R$ 500', forma_pagamento:'TÔ LEVANTANDO AINDA, SEM PRAZO CERTO', disponibilidade:'ATÉ 1 HORA', motivo:'preciso mudar de vida urgente, tenho 2 filhos, trabalho 14h por dia e n consigo nem dormir', created_at: new Date(now - 2*day).toISOString()},
+      {nome:'Amanda Reis', whatsapp:'(81) 99887-6655', instagram:'@amandareis.co', notebook:'SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM', fonte_renda:'Sócia de uma agência de marketing. Faturamos uns 80k/mês.', experiencia_venda:'SIM, JÁ FIZ LANÇAMENTO COMPLETO (com aquecimento e abertura de carrinho)', faturamento:'ACIMA DE R$ 20.000', valor_investir:'R$ 50.000', forma_pagamento:'TENHO DISPONÍVEL À VISTA NO PIX', disponibilidade:'1 HORA A 3 HORAS', motivo:'Quero criar produto próprio escalável sem trocar tempo por dinheiro. SaaS é exatamente o que tô procurando.', created_at: new Date(now - 2*day - 6*60*60*1000).toISOString()},
+      {nome:'Lucas Mendes', whatsapp:'(51) 98765-9988', instagram:'@lucasmendes.tech', notebook:'SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM', fonte_renda:'Dev backend freela. Trabalho com Node e AWS.', experiencia_venda:'JÁ VENDI ALGO ONLINE, MAS NUNCA AO VIVO (página de vendas, DM, grupo, VSL)', faturamento:'R$ 10.000 A R$ 20.000', valor_investir:'R$ 12.000', forma_pagamento:'TENHO DISPONÍVEL PARCELADO NO CARTÃO (ATÉ 12X)', disponibilidade:'+ 6 HORAS', motivo:'Tenho ideia de SaaS validada mas nunca lancei. Quero metodologia pra fazer dar certo.', created_at: new Date(now - 6*day).toISOString()}
+    ];
+    return sample.map((d, i) => ({
+      id:'demo-'+i,
+      number:i+1,
+      created_at:d.created_at,
+      data:d
+    }));
+  }
+
+  // ===== Utilities =====
+  function toast(msg, isErr){
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('error', !!isErr);
+    toastEl.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toastEl.classList.remove('show'), 3000);
+  }
+  function fmtDate(d){
+    const dt = new Date(d);
+    return dt.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
+  function fmtDay(d){
+    const dt = new Date(d);
+    return dt.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'});
+  }
+  function startOfDay(d){
+    const x = new Date(d); x.setHours(0,0,0,0); return x;
+  }
+  function startOfYesterday(){
+    const x = startOfDay(new Date()); x.setDate(x.getDate()-1); return x;
+  }
+  function startOfWeek(){
+    const x = startOfDay(new Date()); x.setDate(x.getDate()-7); return x;
+  }
+  function startOfMonth(){
+    const x = startOfDay(new Date()); x.setDate(x.getDate()-30); return x;
+  }
+
+  // ===== Phone → WhatsApp link =====
+  function digits(s){ return (s||'').replace(/\D/g,''); }
+  function waLink(phone, nome){
+    let d = digits(phone);
+    if(!d) return null;
+    if(!d.startsWith('55')) d = '55' + d;
+    const msg = encodeURIComponent(`Oi ${ (nome||'').split(' ')[0] || ''}, aqui é o Eduardo Chimaida 👋 Vi sua aplicação pra mentoria. Vamos conversar?`);
+    return `https://wa.me/${d}?text=${msg}`;
+  }
+  function igLink(handle){
+    if(!handle) return null;
+    let h = handle.trim().replace(/^@/,'').replace(/^.*instagram\.com\//,'').replace(/\/$/,'');
+    if(!h) return null;
+    return `https://instagram.com/${h}`;
+  }
+
+  // ===== Faturamento tier badge =====
+  function fatTier(fat){
+    if(!fat) return {cls:'tier-1', label:'—'};
+    if(fat.includes('ACIMA')) return {cls:'tier-3', label:'+20k'};
+    if(fat.includes('10.000')) return {cls:'tier-3', label:'10–20k'};
+    if(fat.includes('2.000 A R$ 5')) return {cls:'tier-2', label:'2–5k'};
+    if(fat.includes('ATÉ R$ 2')) return {cls:'tier-1', label:'até 2k'};
+    if(fat.includes('NÃO')) return {cls:'tier-0', label:'sem fat.'};
+    return {cls:'tier-1', label:fat};
+  }
+
+  // ===== Auth =====
+  function showAuth(err){
+    authScreen.style.display = 'flex';
+    dashboard.style.display = 'none';
+    actionsBar.style.display = 'none';
+    if(err){ authError.textContent = err; authError.style.display = 'block'; }
+    else { authError.style.display = 'none'; }
+  }
+  function showDashboard(){
+    authScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    actionsBar.style.display = 'flex';
+    document.getElementById('demoBadge').style.display = demoMode ? 'inline-flex' : 'none';
+  }
+
+  async function netlifyError(res){
+    let body = '';
+    try { body = await res.text(); } catch {}
+    let parsed = null;
+    try { parsed = JSON.parse(body); } catch {}
+    const msg = parsed?.message || parsed?.error || body || res.statusText || 'Erro desconhecido';
+    return { status: res.status, message: msg, body };
+  }
+
+  function explain401(){
+    return 'TOKEN INVÁLIDO (401). Causas mais comuns:\n• Token copiado pela metade (passa espaço ou faltou caractere)\n• Token foi revogado/expirou\n• Você colou o Site ID no campo do token (ou vice-versa)\n→ Gere um token novo em app.netlify.com/user/applications, clique em "SAIR" e cole o token novo.';
+  }
+  function explain404(s){
+    return `SITE NÃO ENCONTRADO (404). O Site ID "${s}" não existe ou seu token não tem acesso a ele.\n• Confira se você está logado na mesma conta Netlify onde o site está\n• Se o site é de um time, o token precisa ser de um membro do time\n• Site ID pode ser o UUID (32 chars com traços) OU o slug do site (ex: "mentoria-eduardo")\n• NÃO use o domínio completo (".netlify.app" não vai)`;
+  }
+  function explain403(){
+    return 'PROIBIDO (403). Seu token é válido mas não tem permissão pra esse site específico (provavelmente é um site de outro time/conta).';
+  }
+
+  // Demo mode
+  document.getElementById('demoBtn').addEventListener('click', () => {
+    demoMode = true;
+    submissions = makeDemoData();
+    // Calls de demonstração
+    var demoNow = new Date();
+    calls = {};
+    var demoMap = [
+      {idx:0, offset:0, time:'14:00'},
+      {idx:1, offset:0, time:'16:00'},
+      {idx:2, offset:1, time:'10:00'},
+      {idx:4, offset:2, time:'15:00'},
+      {idx:6, offset:5, time:'11:00'}
+    ];
+    demoMap.forEach(m => {
+      var d = new Date(demoNow); d.setDate(d.getDate() + m.offset);
+      if(submissions[m.idx]){
+        calls[submissions[m.idx].id] = {date: dateKey(d), time: m.time, updated_at: new Date().toISOString()};
+      }
+    });
+    // Lead meta de demo (status + vendas)
+    leadMeta = {};
+    var demoStatuses = [
+      {idx:0, status:'qualificado'},
+      {idx:1, status:'em_conversa'},
+      {idx:2, status:'qualificado'},
+      {idx:3, status:'descartado'},
+      {idx:4, status:'cliente', sale:8000},
+      {idx:5, status:'descartado'},
+      {idx:6, status:'cliente', sale:15000},
+      {idx:7, status:'em_conversa'}
+    ];
+    demoStatuses.forEach(d => {
+      if(submissions[d.idx]){
+        leadMeta[submissions[d.idx].id] = {
+          status: d.status,
+          sale_value: d.sale || 0,
+          sale_date: d.sale ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString()
+        };
+      }
+    });
+    showDashboard();
+    renderStats();
+    renderTable();
+    updateTabCounts();
+    toast('Modo demo ativado — leads, calls e dashboard com dados de exemplo');
+  });
+
+  authBtn.addEventListener('click', async () => {
+    const p = patInput.value.trim();
+    const s = cleanSiteId(siteIdInput.value);
+    if(!p || !s){ showAuth('Cola token e site ID.'); return; }
+    // Quick sanity checks before hitting the API
+    if(!/^nfp_/.test(p) && p.length < 30){
+      showAuth('Esse token parece curto demais. Token do Netlify começa com "nfp_" e tem 40+ caracteres. Verifica se copiou completo.');
+      return;
+    }
+    authBtn.disabled = true;
+    authBtn.textContent = 'VALIDANDO...';
+    try{
+      const r = await fetch(`${API}/sites/${s}`, {headers:{'Authorization':`Bearer ${p}`}});
+      if(!r.ok){
+        const err = await netlifyError(r);
+        console.error('Netlify API error:', err);
+        let friendly;
+        if(err.status === 401) friendly = explain401();
+        else if(err.status === 404) friendly = explain404(s);
+        else if(err.status === 403) friendly = explain403();
+        else friendly = `Erro ${err.status}: ${err.message}`;
+        throw new Error(friendly);
+      }
+      pat = p; siteId = s;
+      localStorage.setItem(LS_PAT, p);
+      localStorage.setItem(LS_SITE, s);
+      localStorage.removeItem(LS_FORMID);
+      formId = null;
+      showDashboard();
+      await loadAll();
+    } catch(e){
+      showAuth(e.message);
+    } finally {
+      authBtn.disabled = false;
+      authBtn.textContent = 'ENTRAR';
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    if(demoMode){
+      demoMode = false;
+      submissions = [];
+      showAuth();
+      return;
+    }
+    if(!confirm('Sair e limpar credenciais salvas neste navegador?')) return;
+    localStorage.removeItem(LS_PAT);
+    localStorage.removeItem(LS_SITE);
+    localStorage.removeItem(LS_FORMID);
+    pat = siteId = formId = null;
+    patInput.value = '';
+    siteIdInput.value = '';
+    showAuth();
+  });
+
+  // ===== Load submissions =====
+  async function loadAll(){
+    if(demoMode){
+      submissions = makeDemoData();
+      // demo calls: agenda algumas pros próximos dias
+      var demoNow = new Date();
+      calls = {};
+      var demoMap = [
+        {idx:0, offset:0, time:'14:00'},
+        {idx:1, offset:0, time:'16:00'},
+        {idx:2, offset:1, time:'10:00'},
+        {idx:4, offset:2, time:'15:00'},
+        {idx:6, offset:5, time:'11:00'}
+      ];
+      demoMap.forEach(m => {
+        var d = new Date(demoNow); d.setDate(d.getDate() + m.offset);
+        if(submissions[m.idx]){
+          calls[submissions[m.idx].id] = {date: dateKey(d), time: m.time, updated_at: new Date().toISOString()};
+        }
+      });
+      renderStats();
+      renderTable();
+      updateTabCounts();
+      if(currentTab === 'calls') renderCallsView();
+      toast('Dados demo recarregados');
+      return;
+    }
+    refreshBtn.classList.add('spinning');
+    tableWrap.innerHTML = '<div class="loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Carregando aplicações...</div>';
+    try{
+      if(!formId){
+        const r = await fetch(`${API}/sites/${siteId}/forms`, {headers:{'Authorization':`Bearer ${pat}`}});
+        if(!r.ok) throw new Error(`Erro ao listar forms (${r.status})`);
+        const forms = await r.json();
+        const f = forms.find(x => x.name === FORM_NAME);
+        if(!f) throw new Error(`Form "${FORM_NAME}" não encontrado nesse site. Verifica se o site tem o formulário ativo.`);
+        formId = f.id;
+        localStorage.setItem(LS_FORMID, formId);
+      }
+      // Fetch submissions (paginated)
+      submissions = [];
+      let page = 1;
+      while(true){
+        const r = await fetch(`${API}/forms/${formId}/submissions?per_page=100&page=${page}`, {headers:{'Authorization':`Bearer ${pat}`}});
+        if(!r.ok) throw new Error(`Erro ao buscar submissões (${r.status})`);
+        const batch = await r.json();
+        if(!batch.length) break;
+        submissions = submissions.concat(batch);
+        if(batch.length < 100) break;
+        page++;
+        if(page > 50) break; // safety
+      }
+      renderStats();
+      renderTable();
+      updateTabCounts();
+      if(currentTab === 'calls') renderCallsView();
+      if(currentTab === 'dashboard') renderDashboard();
+      toast(`${submissions.length} aplicação${submissions.length===1?'':'ões'} carregada${submissions.length===1?'':'s'}`);
+    } catch(e){
+      console.error(e);
+      tableWrap.innerHTML = `<div class="empty" style="color:#ff8a8a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${e.message}</div>`;
+      toast(e.message, true);
+    } finally {
+      refreshBtn.classList.remove('spinning');
+    }
+  }
+
+  refreshBtn.addEventListener('click', loadAll);
+
+  // ===== Stats =====
+  function renderStats(){
+    const now = new Date();
+    const today = startOfDay(now);
+    const yesterday = startOfYesterday();
+    const week = startOfWeek();
+    const prevWeekStart = new Date(week); prevWeekStart.setDate(prevWeekStart.getDate()-7);
+
+    const dates = submissions.map(s => new Date(s.created_at));
+    const cToday = dates.filter(d => d >= today).length;
+    const cYest  = dates.filter(d => d >= yesterday && d < today).length;
+    const cWeek  = dates.filter(d => d >= week).length;
+    const cPrevWeek = dates.filter(d => d >= prevWeekStart && d < week).length;
+    const cTotal = submissions.length;
+
+    function pctChip(curr, prev){
+      if(prev === 0 && curr === 0) return `<span class="chip neutral">— sem dados ontem</span>`;
+      if(prev === 0) return `<span class="chip up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>NOVO</span>`;
+      const diff = ((curr - prev) / prev) * 100;
+      const cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'neutral');
+      const arrow = diff > 0
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`
+        : diff < 0
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`
+          : '';
+      const sign = diff > 0 ? '+' : '';
+      return `<span class="chip ${cls}">${arrow}${sign}${Math.round(diff)}%</span>`;
+    }
+
+    statsEl.innerHTML = `
+      <div class="stat">
+        <div class="stat-label">LEADS HOJE</div>
+        <div class="stat-value">${cToday}</div>
+        <div class="stat-meta">${pctChip(cToday, cYest)}<span>vs. ontem (${cYest})</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">ONTEM</div>
+        <div class="stat-value">${cYest}</div>
+        <div class="stat-meta"><span>referência</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">ÚLTIMOS 7 DIAS</div>
+        <div class="stat-value">${cWeek}</div>
+        <div class="stat-meta">${pctChip(cWeek, cPrevWeek)}<span>vs. 7 anteriores (${cPrevWeek})</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">TOTAL GERAL</div>
+        <div class="stat-value">${cTotal}</div>
+        <div class="stat-meta"><span>${submissions.length>0?'desde '+fmtDay(submissions[submissions.length-1].created_at):'—'}</span></div>
+      </div>
+    `;
+  }
+
+  // ===== Table =====
+  function getData(sub){
+    return sub.data || {};
+  }
+  function filtered(){
+    const q = (searchInput.value || '').toLowerCase().trim();
+    const period = periodFilter.value;
+    const fat = fatFilter.value;
+    const stFilterEl = document.getElementById('statusFilter');
+    const stFilter = stFilterEl ? stFilterEl.value : 'all';
+    return submissions.filter(s => {
+      const d = getData(s);
+      if(q){
+        const hay = [d.nome, d.whatsapp, d.instagram, d.fonte_renda, d.motivo].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      if(fat !== 'all' && d.faturamento !== fat) return false;
+      if(stFilter !== 'all' && getMeta(s.id).status !== stFilter) return false;
+      if(period !== 'all'){
+        const dt = new Date(s.created_at);
+        const today = startOfDay(new Date());
+        const yesterday = startOfYesterday();
+        if(period === 'today' && dt < today) return false;
+        if(period === 'yesterday' && (dt < yesterday || dt >= today)) return false;
+        if(period === 'week' && dt < startOfWeek()) return false;
+        if(period === 'month' && dt < startOfMonth()) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderTable(){
+    const rows = filtered();
+    if(!rows.length){
+      tableWrap.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Nenhuma aplicação no filtro atual.</div>`;
+      return;
+    }
+    const tbody = rows.map((s,idx) => {
+      const d = getData(s);
+      const tier = fatTier(d.faturamento);
+      const wa = waLink(d.whatsapp, d.nome);
+      const ig = igLink(d.instagram);
+      const m = getMeta(s.id);
+      const statusChip = `<span class="status-chip ${STATUS_CSS[m.status]||''}">${STATUS_LABELS[m.status]||'NOVO'}</span>`;
+      return `
+        <tr data-idx="${submissions.indexOf(s)}">
+          <td class="cell-date">${fmtDate(s.created_at)}</td>
+          <td class="cell-name">${escapeHtml(d.nome || '—')}</td>
+          <td>${statusChip}</td>
+          <td>${d.whatsapp ? `<span class="cell-ig">+55 ${escapeHtml(d.whatsapp)}</span>` : '<span style="color:var(--muted-soft)">—</span>'}</td>
+          <td class="cell-ig">${d.instagram ? escapeHtml(d.instagram) : '<span style="color:var(--muted-soft)">—</span>'}</td>
+          <td><span class="badge ${tier.cls}">${tier.label}</span></td>
+          <td><span class="cell-fat" style="color:var(--muted)">${escapeHtml(d.disponibilidade || '—')}</span></td>
+          <td onclick="event.stopPropagation()">
+            <div class="actions-cell">
+              ${wa ? `<a class="icon-link wa" href="${wa}" target="_blank" rel="noopener" title="Abrir WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg></a>` : ''}
+              ${ig ? `<a class="icon-link ig" href="${ig}" target="_blank" rel="noopener" title="Abrir Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    tableWrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>DATA</th>
+            <th>NOME</th>
+            <th>STATUS</th>
+            <th>WHATSAPP</th>
+            <th>INSTAGRAM</th>
+            <th>FAT.</th>
+            <th>DISPONIBILIDADE</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    `;
+    tableWrap.querySelectorAll('tbody tr').forEach(tr => {
+      tr.addEventListener('click', () => openDrawer(parseInt(tr.dataset.idx,10)));
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ===== Drawer =====
+  function openDrawer(idx){
+    const s = submissions[idx];
+    if(!s) return;
+    const d = getData(s);
+    drawerTitle.textContent = d.nome || 'Aplicação';
+    const fields = [
+      ['Recebido em', fmtDate(s.created_at), false],
+      ['WhatsApp', d.whatsapp ? '+55 ' + d.whatsapp : '—', false],
+      ['Instagram', d.instagram || '—', false],
+      ['Notebook / PC', d.notebook || '—', false],
+      ['Fonte de renda hoje', d.fonte_renda || '—', true],
+      ['Experiência em venda', d.experiencia_venda || '—', false],
+      ['Faturamento mensal', d.faturamento || '—', false],
+      ['Disponível pra investir', d.valor_investir || '—', false],
+      ['Forma de pagamento', d.forma_pagamento || '—', false],
+      ['Disponibilidade diária', d.disponibilidade || '—', false],
+      ['Motivo', d.motivo || '—', true]
+    ];
+    var meta = getMeta(s.id);
+    var statusHtml = `
+      <div class="schedule-section ${meta.status !== 'novo' ? 'has-call' : ''}" style="background:${meta.status === 'cliente' ? 'rgba(34,197,94,.06)' : meta.status === 'descartado' ? 'rgba(255,90,90,.04)' : 'rgba(96,165,250,.04)'};border-color:${meta.status === 'cliente' ? 'rgba(34,197,94,.3)' : meta.status === 'descartado' ? 'rgba(255,90,90,.25)' : 'rgba(96,165,250,.25)'}">
+        <div class="schedule-section-header">STATUS DO LEAD</div>
+        <div class="status-badges">
+          ${['novo','qualificado','em_conversa','cliente','descartado'].map(st => `<button class="status-btn ${meta.status===st?'active':''} ${STATUS_CSS[st]}" data-status="${st}">${STATUS_LABELS[st]}</button>`).join('')}
+        </div>
+        <div class="sale-section ${meta.status === 'cliente' ? '' : 'empty'}" id="saleSection-${s.id}" style="${meta.status === 'cliente' ? '' : 'display:none'}">
+          <div class="schedule-section-header" style="margin-bottom:6px">VALOR DA VENDA (R$)</div>
+          <div class="sale-row">
+            <input type="number" id="saleValue-${s.id}" min="0" step="100" placeholder="ex: 5000" value="${meta.sale_value || ''}" />
+            <button class="btn-sm save" id="saveSaleBtn-${s.id}">SALVAR</button>
+          </div>
+        </div>
+      </div>
+    `;
+    var existingCall = getCallForSub(s.id);
+    var scheduleHtml = `
+      <div class="schedule-section ${existingCall ? 'has-call' : ''}" id="sched-${s.id}">
+        <div class="schedule-section-header">
+          <i style="font-style:normal">${existingCall ? '✓ CALL AGENDADA' : '◷ AGENDAR CALL'}</i>
+        </div>
+        ${existingCall ? `
+          <div class="schedule-current">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${fmtCallDay(new Date(existingCall.date+'T'+existingCall.time+':00'))} · ${escapeHtml(existingCall.time)}
+          </div>
+        ` : '<div style="font-size:13px;color:var(--muted)">Nenhuma call agendada com este lead ainda.</div>'}
+        <div class="schedule-actions">
+          <button class="btn-sm cancel" id="schedToggle-${s.id}">${existingCall ? 'EDITAR' : 'MARCAR CALL'}</button>
+          ${existingCall ? `<a class="btn-sm gcal" href="${gcalLink(new Date(existingCall.date+'T'+existingCall.time+':00'), d.nome, d.whatsapp)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>GOOGLE CALENDAR</a>` : ''}
+          ${existingCall ? `<button class="btn-sm ics" id="schedIcs-${s.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>.ICS</button>` : ''}
+          ${existingCall ? `<button class="btn-sm delete" id="schedDel-${s.id}">CANCELAR CALL</button>` : ''}
+        </div>
+        <div class="schedule-form" id="schedForm-${s.id}">
+          <div class="cal">
+            <div class="cal-head">
+              <div class="cal-month">—</div>
+              <div class="cal-nav">
+                <button type="button" aria-label="Mês anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button type="button" aria-label="Próximo mês"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+            </div>
+            <div class="cal-weekdays"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
+            <div class="cal-days"></div>
+          </div>
+          <div class="slots-grid" id="schedSlots-${s.id}">
+            ${['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'].map(t => `<button type="button" class="slot" data-time="${t}">${t}</button>`).join('')}
+          </div>
+          <div class="schedule-actions" style="margin-top:14px">
+            <button class="btn-sm save" id="schedSave-${s.id}" disabled>SALVAR</button>
+            <button class="btn-sm cancel" id="schedCancel-${s.id}">FECHAR</button>
+          </div>
+        </div>
+      </div>
+    `;
+    drawerBody.innerHTML = '<dl>' + fields.map(([k,v,long]) => `<div><dt>${k}</dt><dd class="${long?'long':''}">${escapeHtml(v)}</dd></div>`).join('') + '</dl>' + statusHtml + scheduleHtml;
+
+    // Wire status buttons
+    drawerBody.querySelectorAll('.status-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        var newStatus = btn.dataset.status;
+        var patch = {status:newStatus};
+        if(newStatus !== 'cliente'){
+          patch.sale_value = 0;
+          patch.sale_date = null;
+        }
+        setMeta(s.id, patch);
+        toast('Status: ' + STATUS_LABELS[newStatus]);
+        if(currentTab === 'leads') renderTable();
+        if(currentTab === 'dashboard') renderDashboard();
+        openDrawer(idx); // re-render
+      });
+    });
+    // Wire sale save button
+    var saleBtn = document.getElementById('saveSaleBtn-'+s.id);
+    if(saleBtn){
+      saleBtn.addEventListener('click', () => {
+        var val = Number(document.getElementById('saleValue-'+s.id).value) || 0;
+        setMeta(s.id, {sale_value:val, sale_date:new Date().toISOString(), status:'cliente'});
+        toast('Venda registrada: ' + fmtBRL(val));
+        if(currentTab === 'leads') renderTable();
+        if(currentTab === 'dashboard') renderDashboard();
+        openDrawer(idx);
+      });
+    }
+
+    // Wire schedule controls
+    var initial = existingCall ? new Date(existingCall.date+'T00:00:00') : null;
+    var pickedDate = initial;
+    var pickedTime = existingCall ? existingCall.time : null;
+    var formEl = document.getElementById('schedForm-'+s.id);
+    var saveBtn = document.getElementById('schedSave-'+s.id);
+    var toggleBtn = document.getElementById('schedToggle-'+s.id);
+    var cancelBtn = document.getElementById('schedCancel-'+s.id);
+    var delBtn = document.getElementById('schedDel-'+s.id);
+    var icsBtn = document.getElementById('schedIcs-'+s.id);
+    function refreshSaveBtn(){ saveBtn.disabled = !(pickedDate && pickedTime) }
+    var calApi = buildCalendar(formEl.querySelector('.cal'), initial || new Date());
+    calApi.onChange(dt => { pickedDate = dt; refreshSaveBtn(); });
+    // mark slots
+    formEl.querySelectorAll('.slot').forEach(b => {
+      if(b.dataset.time === pickedTime) b.classList.add('selected');
+      b.addEventListener('click', () => {
+        formEl.querySelectorAll('.slot').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected');
+        pickedTime = b.dataset.time;
+        refreshSaveBtn();
+      });
+    });
+    if(existingCall) formEl.classList.add('open');
+    toggleBtn.addEventListener('click', () => formEl.classList.toggle('open'));
+    cancelBtn.addEventListener('click', () => formEl.classList.remove('open'));
+    saveBtn.addEventListener('click', async () => {
+      if(!pickedDate || !pickedTime) return;
+      var dateKeyStr = dateKey(pickedDate);
+      setCall(s.id, dateKeyStr, pickedTime);
+      var msgBase = 'Call agendada · ' + fmtCallDay(new Date(dateKeyStr+'T'+pickedTime+':00')) + ' às ' + pickedTime;
+      updateTabCounts();
+      if(currentTab === 'calls') renderCallsView();
+      // Envia pro Google Agenda em background se conectado
+      if(gcalUrl){
+        toast(msgBase + ' · enviando ao Google Agenda...');
+        var res = await sendCallToGcal({date:dateKeyStr,time:pickedTime}, s);
+        if(res && res.success){
+          toast(msgBase + ' · ✓ criado no Google Agenda');
+        } else {
+          toast(msgBase + ' · falha no Google Agenda (call salva localmente)', true);
+        }
+      } else {
+        toast(msgBase);
+      }
+      openDrawer(idx); // re-render drawer
+    });
+    if(delBtn){
+      delBtn.addEventListener('click', () => {
+        if(!confirm('Cancelar call com ' + (d.nome || 'este lead') + '?')) return;
+        deleteCall(s.id);
+        toast('Call cancelada');
+        updateTabCounts();
+        if(currentTab === 'calls') renderCallsView();
+        openDrawer(idx); // re-render drawer
+      });
+    }
+    if(icsBtn){
+      icsBtn.addEventListener('click', () => downloadIcs(new Date(existingCall.date+'T'+existingCall.time+':00'), d.nome, d.whatsapp));
+    }
+
+    const wa = waLink(d.whatsapp, d.nome);
+    const ig = igLink(d.instagram);
+    drawerActions.innerHTML = `
+      ${wa ? `<a class="btn-primary wa-btn" href="${wa}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>FALAR NO WHATSAPP</a>` : ''}
+      ${ig ? `<a class="btn-primary" style="background:transparent;color:#fff;border-color:var(--border)" href="${ig}" target="_blank" rel="noopener">INSTAGRAM</a>` : ''}
+    `;
+    drawer.classList.add('open');
+    drawerBackdrop.classList.add('open');
+  }
+  function closeDrawer(){
+    drawer.classList.remove('open');
+    drawerBackdrop.classList.remove('open');
+  }
+  drawerClose.addEventListener('click', closeDrawer);
+  drawerBackdrop.addEventListener('click', closeDrawer);
+
+  // ===== Settings modal handlers =====
+  function refreshGcalStatusUI(){
+    var statusEl = document.getElementById('gcalStatus');
+    var disconnectBtn = document.getElementById('gcalDisconnectBtn');
+    if(gcalUrl){
+      statusEl.className = 'gcal-status connected';
+      statusEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> CONECTADO — calls vão aparecer automaticamente no Google Agenda';
+      disconnectBtn.style.display = 'inline-flex';
+    } else {
+      statusEl.className = 'gcal-status disconnected';
+      statusEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> NÃO CONECTADO — configure pra criar eventos automaticamente';
+      disconnectBtn.style.display = 'none';
+    }
+    document.getElementById('gcalUrlInput').value = gcalUrl;
+  }
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    refreshGcalStatusUI();
+    document.getElementById('settingsModal').classList.add('open');
+  });
+  document.getElementById('settingsClose').addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.remove('open');
+  });
+  document.getElementById('settingsModal').addEventListener('click', (e) => {
+    if(e.target.id === 'settingsModal') e.currentTarget.classList.remove('open');
+  });
+  document.getElementById('settingsSaveBtn').addEventListener('click', () => {
+    var v = document.getElementById('gcalUrlInput').value.trim();
+    if(v && !/^https:\/\/script\.google\.com\//.test(v)){
+      toast('URL deve começar com https://script.google.com/...', true);
+      return;
+    }
+    saveGcalUrl(v);
+    refreshGcalStatusUI();
+    toast(v ? 'Google Agenda conectado!' : 'Configuração salva');
+  });
+  document.getElementById('gcalDisconnectBtn').addEventListener('click', () => {
+    if(!confirm('Desconectar Google Agenda? Calls novas não criarão eventos automaticamente.')) return;
+    saveGcalUrl('');
+    refreshGcalStatusUI();
+    toast('Desconectado do Google Agenda');
+  });
+  document.getElementById('gcalTestBtn').addEventListener('click', async () => {
+    var v = document.getElementById('gcalUrlInput').value.trim();
+    if(!v){ toast('Cola a URL primeiro', true); return; }
+    var btn = document.getElementById('gcalTestBtn');
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-opacity=".25"/><path d="M21 12a9 9 0 0 1-9 9"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>TESTANDO...';
+    try{
+      var oldUrl = gcalUrl;
+      gcalUrl = v;
+      var testCall = {date: dateKey(new Date(Date.now()+24*60*60*1000)), time:'15:00'};
+      var testSub = {data:{nome:'TESTE DE CONEXÃO GOAT', whatsapp:'11999999999'}};
+      var res = await sendCallToGcal(testCall, testSub);
+      gcalUrl = oldUrl;
+      if(res && res.success){
+        toast('✓ Funcionou! Evento de teste criado. Apaga ele no Google Agenda se quiser.');
+      } else {
+        toast('Falhou: ' + ((res && res.error) || 'sem resposta'), true);
+      }
+    } finally {
+      btn.innerHTML = orig;
+    }
+  });
+  document.getElementById('setupGuideBtn').addEventListener('click', () => {
+    document.getElementById('setupGuideModal').classList.add('open');
+  });
+  document.getElementById('setupGuideClose').addEventListener('click', () => {
+    document.getElementById('setupGuideModal').classList.remove('open');
+  });
+  document.getElementById('setupGuideModal').addEventListener('click', (e) => {
+    if(e.target.id === 'setupGuideModal') e.currentTarget.classList.remove('open');
+  });
+  document.getElementById('copyScriptBtn').addEventListener('click', () => {
+    var code = document.getElementById('appsScriptCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      var b = document.getElementById('copyScriptBtn');
+      var orig = b.textContent;
+      b.textContent = 'COPIADO ✓';
+      setTimeout(() => b.textContent = orig, 1800);
+    }).catch(() => toast('Erro ao copiar — selecione e copie manualmente', true));
+  });
+
+  // ===== Tabs =====
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      currentTab = t.dataset.tab;
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === currentTab));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === currentTab));
+      if(currentTab === 'calls') renderCallsView();
+      if(currentTab === 'dashboard') renderDashboard();
+    });
+  });
+  function updateTabCounts(){
+    document.getElementById('tabCountLeads').textContent = submissions.length;
+    document.getElementById('tabCountCalls').textContent = Object.keys(calls).filter(id => submissions.find(s => String(s.id) === String(id))).length;
+  }
+
+  // ===== Calls view =====
+  function renderCallsStats(){
+    var list = callsList();
+    var now = new Date();
+    var today = startOfDay(now);
+    var weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+    var dayEnd = new Date(today); dayEnd.setDate(today.getDate() + 1);
+    var todayCalls = list.filter(x => x.dt >= today && x.dt < dayEnd).sort((a,b) => a.dt - b.dt);
+    var weekCalls = list.filter(x => x.dt >= today && x.dt < weekEnd);
+    var upcoming = list.filter(x => x.dt >= now).sort((a,b) => a.dt - b.dt);
+    var overdue = list.filter(x => x.dt < now);
+    var next = upcoming[0];
+    var statsEl = document.getElementById('callsStats');
+    statsEl.innerHTML = `
+      <div class="stat">
+        <div class="stat-label">PRÓXIMA CALL</div>
+        <div class="stat-value" style="font-size:22px;line-height:1.2">${next ? escapeHtml((next.sub.data?.nome || 'Lead').split(' ')[0]) : '—'}</div>
+        <div class="stat-meta"><span>${next ? fmtCallDay(next.dt) + ' · ' + next.call.time : 'sem calls agendadas'}</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">HOJE</div>
+        <div class="stat-value">${todayCalls.length}</div>
+        <div class="stat-meta"><span>${todayCalls.length ? 'primeira ' + todayCalls[0].call.time : 'agenda livre'}</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">PRÓXIMOS 7 DIAS</div>
+        <div class="stat-value">${weekCalls.length}</div>
+        <div class="stat-meta"><span>agendadas até ${fmtCallDate(weekEnd)}</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">ATRASADAS</div>
+        <div class="stat-value" style="${overdue.length ? 'color:#ff8a8a' : ''}">${overdue.length}</div>
+        <div class="stat-meta"><span>${overdue.length ? 'precisa de follow-up' : 'tudo em dia'}</span></div>
+      </div>
+    `;
+  }
+  function renderCallsTable(){
+    var list = callsList();
+    var q = (document.getElementById('callsSearchInput').value || '').toLowerCase().trim();
+    var period = document.getElementById('callsPeriodFilter').value;
+    var now = new Date();
+    var today = startOfDay(now);
+    var dayEnd = new Date(today); dayEnd.setDate(today.getDate() + 1);
+    var weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+    var filtered = list.filter(x => {
+      if(q){
+        var d = x.sub.data || {};
+        var hay = [d.nome, d.whatsapp, d.instagram].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      if(period === 'today') return x.dt >= today && x.dt < dayEnd;
+      if(period === 'week') return x.dt >= today && x.dt < weekEnd;
+      if(period === 'overdue') return x.dt < now;
+      if(period === 'upcoming') return x.dt >= now;
+      return true;
+    }).sort((a,b) => period === 'overdue' ? b.dt - a.dt : a.dt - b.dt);
+    var wrap = document.getElementById('callsTableWrap');
+    if(!filtered.length){
+      wrap.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${list.length === 0 ? 'Nenhuma call agendada ainda. Vai em LEADS, abre um lead e marca a primeira.' : 'Nada no filtro atual.'}</div>`;
+      return;
+    }
+    var rows = filtered.map(x => {
+      var d = x.sub.data || {};
+      var tier = fatTier(d.faturamento);
+      var wa = waLink(d.whatsapp, d.nome);
+      var chip = chipFor(x.dt);
+      var valor = (d.valor_investir || '—');
+      return `
+        <tr data-sub-id="${escapeHtml(String(x.subId))}">
+          <td>
+            <div class="call-when">
+              <span class="call-day-chip ${chip.cls}">${chip.text}</span>
+              <span class="call-time">${escapeHtml(x.call.time)} · ${fmtCallDay(x.dt)}</span>
+            </div>
+          </td>
+          <td class="cell-name">${escapeHtml(d.nome || '—')}</td>
+          <td>${d.whatsapp ? `<span class="cell-ig">+55 ${escapeHtml(d.whatsapp)}</span>` : '<span style="color:var(--muted-soft)">—</span>'}</td>
+          <td><span class="badge ${tier.cls}">${tier.label}</span></td>
+          <td><span class="cell-fat" style="color:var(--muted)">${escapeHtml(valor)}</span></td>
+          <td onclick="event.stopPropagation()">
+            <div class="call-actions">
+              ${wa ? `<a class="icon-link wa" href="${wa}" target="_blank" rel="noopener" title="Abrir WhatsApp" style="width:30px;height:30px;border-radius:7px"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg></a>` : ''}
+              <a class="icon-link" href="${gcalLink(x.dt, d.nome, d.whatsapp)}" target="_blank" rel="noopener" title="Adicionar ao Google Calendar" style="color:#60a5fa;width:30px;height:30px;border-radius:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>QUANDO</th>
+            <th>NOME</th>
+            <th>WHATSAPP</th>
+            <th>FAT.</th>
+            <th>INVESTIR</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    wrap.querySelectorAll('tbody tr').forEach(tr => {
+      tr.addEventListener('click', () => {
+        var subId = tr.dataset.subId;
+        var sub = submissions.find(s => String(s.id) === String(subId));
+        if(sub) openDrawer(submissions.indexOf(sub));
+      });
+    });
+  }
+  function renderCallsView(){
+    renderCallsStats();
+    renderCallsTable();
+  }
+  document.getElementById('callsSearchInput').addEventListener('input', renderCallsTable);
+  document.getElementById('callsPeriodFilter').addEventListener('change', renderCallsView);
+
+  // ===== Dashboard view =====
+  var dashPeriod = 'month';
+  function dashRange(){
+    var now = new Date();
+    if(dashPeriod === 'month'){
+      var s = new Date(now.getFullYear(), now.getMonth(), 1);
+      var e = new Date(now.getFullYear(), now.getMonth()+1, 1);
+      return {start:s, end:e, label:'este mês'};
+    }
+    if(dashPeriod === '30d'){
+      var s = new Date(now); s.setDate(s.getDate()-30);
+      return {start:s, end:new Date(now.getFullYear(),now.getMonth()+1,1), label:'últimos 30 dias'};
+    }
+    if(dashPeriod === 'year'){
+      var s = new Date(now.getFullYear(),0,1);
+      return {start:s, end:new Date(now.getFullYear()+1,0,1), label:'este ano'};
+    }
+    return {start:new Date(0), end:new Date(now.getFullYear()+10,0,1), label:'todos os períodos'};
+  }
+  function dashStats(){
+    var r = dashRange();
+    var inRange = (d) => d >= r.start && d < r.end;
+    var leads = submissions.filter(s => inRange(new Date(s.created_at)));
+    var qualified = leads.filter(s => {
+      var m = getMeta(s.id);
+      return m.status === 'qualificado' || m.status === 'em_conversa' || m.status === 'cliente';
+    });
+    var scheduledCalls = leads.filter(s => calls[s.id] != null);
+    var clients = leads.filter(s => getMeta(s.id).status === 'cliente');
+    var revenue = clients.reduce((sum, s) => sum + (getMeta(s.id).sale_value || 0), 0);
+    return {range:r, leads, qualified, scheduledCalls, clients, revenue};
+  }
+  function renderGoals(){
+    var s = dashStats();
+    var gridEl = document.getElementById('goalGrid');
+    function card(label, current, target, isMoney, icon){
+      var pct = target > 0 ? Math.min(999, Math.round((current/target)*100)) : 0;
+      var pctCls = pct >= 80 ? 'high' : (pct >= 40 ? 'mid' : 'low');
+      var displayCurrent = isMoney ? fmtBRL(current) : current;
+      var displayTarget = isMoney ? fmtBRL(target) : target;
+      return `
+        <div class="goal-card">
+          <div class="goal-label">${label} ${icon}</div>
+          <div class="goal-numbers">
+            <span class="goal-current">${displayCurrent}</span>
+            <span class="goal-target">/ ${displayTarget}</span>
+            <span class="goal-pct ${pctCls}">${pct}%</span>
+          </div>
+          <div class="goal-bar"><div class="goal-bar-fill ${pctCls}" style="width:${Math.min(100,pct)}%"></div></div>
+        </div>
+      `;
+    }
+    var iconUsers = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
+    var iconCal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+    var iconCheck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var iconMoney = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    gridEl.innerHTML = card('LEADS', s.leads.length, goals.leads, false, iconUsers)
+      + card('CALLS AGENDADAS', s.scheduledCalls.length, goals.calls, false, iconCal)
+      + card('VENDAS', s.clients.length, goals.sales, false, iconCheck)
+      + card('FATURAMENTO', s.revenue, goals.revenue, true, iconMoney);
+  }
+  function renderFunnel(){
+    var s = dashStats();
+    document.getElementById('funnelPeriodLabel').textContent = '— período: ' + s.range.label;
+    var total = s.leads.length;
+    var qual = s.qualified.length;
+    var scheduled = s.scheduledCalls.length;
+    var clients = s.clients.length;
+    function pctOf(a, b){return b > 0 ? Math.round((a/b)*100) : 0}
+    function row(label, count, base, color, icon){
+      var pct = pctOf(count, base);
+      var globalPct = pctOf(count, total);
+      var dropChip = base > 0 && base !== count ? `<span class="drop">↓ ${base-count} drop</span>` : '';
+      return `
+        <div class="funnel-row">
+          <div class="funnel-icon" style="color:${color}">${icon}</div>
+          <div class="funnel-info">
+            <div class="funnel-label">${label}</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${globalPct}%;background:${color}"></div></div>
+          </div>
+          <div class="funnel-stats">
+            <div class="funnel-count">${count}</div>
+            <div class="funnel-pct">${globalPct}% do total ${dropChip}</div>
+          </div>
+        </div>
+      `;
+    }
+    var iconUsers = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
+    var iconStar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    var iconCal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+    var iconClient = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    document.getElementById('funnel').innerHTML =
+      row('LEADS QUE ENTRARAM', total, total, '#fff', iconUsers)
+      + row('QUALIFICADOS', qual, total, '#60a5fa', iconStar)
+      + row('CALL AGENDADA', scheduled, total, '#a07bff', iconCal)
+      + row('VENDA FECHADA', clients, total, '#22c55e', iconClient);
+
+    // Conversion summary cards
+    var convL2Q = pctOf(qual, total);
+    var convQ2C = pctOf(scheduled, qual);
+    var convC2S = pctOf(clients, scheduled);
+    var convL2S = pctOf(clients, total);
+    var avgTicket = clients > 0 ? Math.round(s.revenue / clients) : 0;
+    document.getElementById('convGrid').innerHTML = `
+      <div class="conv-card"><div class="conv-label">LEAD → QUALIFICADO</div><div class="conv-value">${convL2Q}%</div><div class="conv-sub">${qual} de ${total}</div></div>
+      <div class="conv-card"><div class="conv-label">QUALIF. → CALL</div><div class="conv-value">${convQ2C}%</div><div class="conv-sub">${scheduled} de ${qual||0}</div></div>
+      <div class="conv-card"><div class="conv-label">CALL → VENDA</div><div class="conv-value">${convC2S}%</div><div class="conv-sub">${clients} de ${scheduled||0}</div></div>
+      <div class="conv-card"><div class="conv-label">LEAD → VENDA</div><div class="conv-value">${convL2S}%</div><div class="conv-sub">conversão total</div></div>
+      <div class="conv-card"><div class="conv-label">TICKET MÉDIO</div><div class="conv-value" style="font-size:18px">${fmtBRL(avgTicket)}</div><div class="conv-sub">por cliente</div></div>
+      <div class="conv-card"><div class="conv-label">FATURAMENTO TOTAL</div><div class="conv-value" style="font-size:18px">${fmtBRL(s.revenue)}</div><div class="conv-sub">${clients} cliente${clients===1?'':'s'}</div></div>
+    `;
+  }
+  function renderDashboard(){
+    renderGoals();
+    renderFunnel();
+  }
+  // Period pills
+  document.querySelectorAll('#dashPeriodPills .period-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('#dashPeriodPills .period-pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      dashPeriod = p.dataset.period;
+      renderDashboard();
+    });
+  });
+  // Goals editor
+  document.getElementById('editGoalsBtn').addEventListener('click', () => {
+    document.getElementById('goalLeads').value = goals.leads;
+    document.getElementById('goalCalls').value = goals.calls;
+    document.getElementById('goalSales').value = goals.sales;
+    document.getElementById('goalRevenue').value = goals.revenue;
+    document.getElementById('goalsEditor').classList.add('open');
+  });
+  document.getElementById('cancelGoalsBtn').addEventListener('click', () => {
+    document.getElementById('goalsEditor').classList.remove('open');
+  });
+  document.getElementById('saveGoalsBtn').addEventListener('click', () => {
+    goals = {
+      leads: Number(document.getElementById('goalLeads').value)||DEFAULT_GOALS.leads,
+      calls: Number(document.getElementById('goalCalls').value)||DEFAULT_GOALS.calls,
+      sales: Number(document.getElementById('goalSales').value)||DEFAULT_GOALS.sales,
+      revenue: Number(document.getElementById('goalRevenue').value)||DEFAULT_GOALS.revenue
+    };
+    saveGoals();
+    document.getElementById('goalsEditor').classList.remove('open');
+    renderDashboard();
+    toast('Metas salvas');
+  });
+
+  // Filters (leads)
+  searchInput.addEventListener('input', renderTable);
+  periodFilter.addEventListener('change', renderTable);
+  fatFilter.addEventListener('change', renderTable);
+  document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeDrawer();
+    if(e.key === 'r' && !e.metaKey && !e.ctrlKey && dashboard.style.display !== 'none' && document.activeElement.tagName !== 'INPUT'){
+      loadAll();
+    }
+  });
+
+  // ===== Boot =====
+  if(pat && siteId){
+    showDashboard();
+    loadAll();
+  } else {
+    showAuth();
+  }
+})();
+</script>
+</body>
+</html>

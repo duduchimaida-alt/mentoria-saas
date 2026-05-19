@@ -372,8 +372,10 @@
     font-family:'JetBrains Mono',monospace;text-align:center;
     transition:all .12s var(--t);
   }
-  .slot:hover:not(.selected){border-color:var(--border-hover);background:rgba(255,255,255,.08)}
+  .slot:hover:not(.selected):not(.taken){border-color:var(--border-hover);background:rgba(255,255,255,.08)}
   .slot.selected{background:#fff;color:#000;border-color:#fff}
+  .slot.taken{opacity:.4;cursor:not-allowed;text-decoration:line-through;background:rgba(255,90,90,.08);border-color:rgba(255,90,90,.2);color:#ff8a8a}
+  .slot.taken:hover{background:rgba(255,90,90,.08)}
   .schedule-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   .schedule-actions .btn-sm{
     padding:8px 14px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;
@@ -935,6 +937,8 @@ function doGet(){
     delete calls[subId];
     saveCalls();
   }
+  function getTakenSlots(dateStr, excludeSubId){var taken=[];Object.keys(calls).forEach(subId=>{if(String(subId)===String(excludeSubId))return;var c=calls[subId];if(c&&c.date===dateStr)taken.push(c.time)});return taken}
+  function getLeadNameAtSlot(dateStr, time, excludeSubId){var found=null;Object.keys(calls).forEach(subId=>{if(String(subId)===String(excludeSubId))return;var c=calls[subId];if(c&&c.date===dateStr&&c.time===time){var sub=submissions.find(s=>String(s.id)===String(subId));if(sub)found=(sub.data&&sub.data.nome)||'?'}});return found}
   function callsList(){
     return Object.keys(calls).map(subId => {
       var sub = submissions.find(s => String(s.id) === String(subId));
@@ -1647,17 +1651,19 @@ function doGet(){
     var icsBtn = document.getElementById('schedIcs-'+s.id);
     function refreshSaveBtn(){ saveBtn.disabled = !(pickedDate && pickedTime) }
     var calApi = buildCalendar(formEl.querySelector('.cal'), initial || new Date());
-    calApi.onChange(dt => { pickedDate = dt; refreshSaveBtn(); });
-    // mark slots
+    function refreshSlotStates(){if(!pickedDate)return;var dStr=dateKey(pickedDate);var taken=getTakenSlots(dStr,s.id);formEl.querySelectorAll('.slot').forEach(b=>{var time=b.dataset.time;var isTaken=taken.indexOf(time)!==-1;if(isTaken){b.classList.add('taken');b.classList.remove('selected');var who=getLeadNameAtSlot(dStr,time,s.id);b.title=who?('Ocupado · '+who):'Ocupado';if(pickedTime===time){pickedTime=null;refreshSaveBtn()}}else{b.classList.remove('taken');b.title=''}})}
+    calApi.onChange(dt => { pickedDate = dt; refreshSlotStates(); refreshSaveBtn(); });
     formEl.querySelectorAll('.slot').forEach(b => {
       if(b.dataset.time === pickedTime) b.classList.add('selected');
       b.addEventListener('click', () => {
+        if(b.classList.contains('taken')){var who=b.title.replace('Ocupado · ','').replace('Ocupado','');toast(who?('Horário ocupado com '+who):'Horário já ocupado',true);return}
         formEl.querySelectorAll('.slot').forEach(x => x.classList.remove('selected'));
         b.classList.add('selected');
         pickedTime = b.dataset.time;
         refreshSaveBtn();
       });
     });
+    refreshSlotStates();
     if(existingCall) formEl.classList.add('open');
     toggleBtn.addEventListener('click', () => formEl.classList.toggle('open'));
     cancelBtn.addEventListener('click', () => formEl.classList.remove('open'));

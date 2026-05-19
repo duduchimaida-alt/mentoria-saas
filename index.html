@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APLICAÇÃO PARA MENTORIA - EDUARDO CHIMAIDA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050505;
+    --bg-soft:#0c0c0c;
+    --fg:#fff;
+    --muted:#9a9a9a;
+    --muted-soft:#5a5a5a;
+    --border:#1c1c1c;
+    --border-hover:#3a3a3a;
+    --accent:#ff2a2a;
+    --chip-bg:rgba(15,15,15,.75);
+    --chip-active:rgba(59,130,246,.10);
+    --chip-active-border:rgba(120,160,255,.5);
+    --radius:10px;
+    --radius-lg:14px;
+    --t:cubic-bezier(.22,.61,.36,1);
+    --t-spring:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body{display:flex;flex-direction:column;min-height:100vh;position:relative}
+
+  /* ===== Subtle grid background ===== */
+  .bg-grid{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-color:#070707;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:64px 64px;
+    background-position:-1px -1px;
+    mask-image:radial-gradient(ellipse 100% 80% at 50% 40%, #000 30%, transparent 100%);
+    -webkit-mask-image:radial-gradient(ellipse 100% 80% at 50% 40%, #000 30%, transparent 100%);
+  }
+  /* Very subtle noise for texture */
+  .bg-noise{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.018;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* ===== Topbar ===== */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:rgba(5,5,5,.7);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:980px;margin:0 auto;padding:16px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .logo{display:flex;flex-direction:column;line-height:.95;font-weight:900;letter-spacing:.5px;font-size:18px}
+  .logo .row{display:flex;align-items:center;gap:6px}
+  .logo .badge{
+    background:var(--accent);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px;font-weight:800;letter-spacing:.3px;
+  }
+  .logo .sub{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:1.4px;margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+  .progress-wrap{flex:1;max-width:400px;display:flex;align-items:center;gap:12px}
+  .progress-text{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.5px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+  .progress-text .now{color:#fff}
+  .progress-bar{flex:1;height:2px;background:var(--border);border-radius:99px;overflow:hidden}
+  .progress-fill{
+    height:100%;background:#fff;width:0;
+    transition:width .55s var(--t);
+    border-radius:99px;
+  }
+
+  /* ===== Main ===== */
+  main{flex:1;display:flex;justify-content:center;padding:52px 24px 90px;min-height:0;position:relative;z-index:1}
+  .stage{width:100%;max-width:760px;position:relative}
+
+  .step{
+    display:none;
+    opacity:0;transform:translateY(14px);
+  }
+  .step.active{
+    display:block;
+    animation:enter .45s var(--t) forwards;
+  }
+  @keyframes enter{
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  .back{
+    display:inline-flex;align-items:center;gap:8px;color:var(--muted);
+    background:transparent;border:0;font-size:12.5px;cursor:pointer;
+    padding:8px 12px 8px 0;margin-bottom:28px;font-weight:500;
+    transition:color .2s var(--t),transform .2s var(--t);
+    font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
+  }
+  .back:hover{color:#fff;transform:translateX(-2px)}
+  .back svg{width:14px;height:14px}
+
+  /* ===== Intro ===== */
+  .intro .tag{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 12px;border-radius:99px;
+    background:rgba(255,255,255,.03);border:1px solid var(--border);
+    color:var(--muted);font-size:10.5px;font-weight:600;letter-spacing:1.8px;
+    font-family:'JetBrains Mono',monospace;margin-bottom:28px;
+  }
+  .intro .tag .pulse{
+    width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 10px rgba(255,42,42,.6);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .intro h1{
+    font-size:clamp(36px,5.2vw,54px);font-weight:800;line-height:1.04;
+    letter-spacing:-1.3px;margin:0 0 34px;color:#fff;
+  }
+  .intro p{
+    font-size:16.5px;line-height:1.65;color:#dfdfdf;font-weight:400;
+    margin:0 0 16px;max-width:620px;
+  }
+  .intro p strong{color:#fff;font-weight:600}
+  .intro .filter{color:#fff;font-weight:500;margin-top:24px}
+
+  /* ===== Question ===== */
+  .question-label{
+    display:flex;align-items:flex-start;gap:12px;
+    font-size:clamp(21px,2.5vw,28px);font-weight:700;letter-spacing:-.4px;
+    line-height:1.28;margin:0 0 12px;text-transform:uppercase;color:#fff;
+  }
+  .question-num{
+    color:var(--muted);font-weight:500;font-family:'JetBrains Mono',monospace;
+    font-size:.6em;letter-spacing:0;padding-top:.55em;
+  }
+  .required{color:var(--accent);font-size:14px;margin-left:4px}
+  .helper{
+    color:var(--muted);font-size:13.5px;margin:10px 0 24px;line-height:1.55;
+    border-left:1px solid var(--border);padding-left:12px;
+  }
+
+  .options{display:flex;flex-direction:column;gap:9px;margin-top:26px}
+  .option{
+    display:flex;align-items:center;gap:14px;
+    background:var(--chip-bg);border:1px solid var(--border);
+    color:#fff;padding:14px 18px;border-radius:var(--radius);
+    text-align:left;font-size:14.5px;font-weight:500;cursor:pointer;
+    width:100%;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    position:relative;overflow:hidden;
+    transition:all .22s var(--t);
+    opacity:0;transform:translateY(6px);
+    animation:optIn .45s var(--t) forwards;
+  }
+  .step.active .option:nth-child(1){animation-delay:.06s}
+  .step.active .option:nth-child(2){animation-delay:.11s}
+  .step.active .option:nth-child(3){animation-delay:.16s}
+  .step.active .option:nth-child(4){animation-delay:.21s}
+  .step.active .option:nth-child(5){animation-delay:.26s}
+  @keyframes optIn{to{opacity:1;transform:translateY(0)}}
+
+  .option:hover{
+    border-color:var(--border-hover);
+    background:rgba(20,20,20,.85);
+    transform:translateY(-1px);
+  }
+  .option.selected{
+    border-color:var(--chip-active-border);
+    background:var(--chip-active);
+  }
+  .option .key{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:5px;
+    background:rgba(255,255,255,.05);border:1px solid var(--border);
+    color:#fff;font-size:11px;font-weight:600;flex-shrink:0;
+    font-family:'JetBrains Mono',monospace;
+    transition:all .22s var(--t);
+  }
+  .option.selected .key{
+    background:#fff;color:#000;border-color:#fff;
+  }
+  .option .label{flex:1}
+  .option .tick{
+    width:16px;height:16px;color:#fff;opacity:0;transform:scale(.6);
+    transition:opacity .2s var(--t),transform .25s var(--t-spring);
+  }
+  .option.selected .tick{opacity:.85;transform:scale(1)}
+
+  /* ===== Inputs ===== */
+  .field{position:relative;max-width:560px}
+  .input, .textarea{
+    width:100%;background:var(--chip-bg);border:1px solid var(--border);
+    color:#fff;padding:14px 16px;border-radius:var(--radius);font-size:15.5px;
+    font-family:inherit;outline:none;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:border-color .22s var(--t),background .22s var(--t);
+  }
+  .input:focus, .textarea:focus{
+    border-color:rgba(255,255,255,.35);
+    background:rgba(15,15,15,.9);
+  }
+  .input::placeholder, .textarea::placeholder{color:var(--muted-soft)}
+  .textarea{min-height:140px;resize:vertical;line-height:1.5;font-family:inherit}
+  .input.short{max-width:380px}
+  .input.number{max-width:300px;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+
+  /* Phone */
+  .phone-row{display:flex;align-items:stretch;gap:0;max-width:380px}
+  .phone-cc{
+    display:flex;align-items:center;gap:8px;
+    background:var(--chip-bg);border:1px solid var(--border);border-right:0;
+    border-radius:var(--radius) 0 0 var(--radius);padding:0 14px;font-size:14px;font-weight:500;
+    font-family:'JetBrains Mono',monospace;color:#fff;
+  }
+  .phone-cc .flag{font-size:17px}
+  .phone-row .input{border-radius:0 var(--radius) var(--radius) 0;border-left:0}
+  .phone-row:focus-within .phone-cc{border-color:rgba(255,255,255,.35)}
+
+  /* ===== Actions ===== */
+  .actions{display:flex;gap:14px;margin-top:30px;align-items:center;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    background:#fff;color:#000;border:1px solid #fff;padding:13px 22px;
+    border-radius:var(--radius);font-weight:600;font-size:12.5px;
+    letter-spacing:1px;cursor:pointer;text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace;
+    transition:transform .15s var(--t-spring),box-shadow .25s var(--t),background .25s var(--t),opacity .2s;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(255,255,255,.08)}
+  .btn:disabled{
+    background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);
+    border-color:rgba(255,255,255,.05);cursor:not-allowed;
+    box-shadow:none;transform:none;
+  }
+  .btn svg{width:14px;height:14px}
+
+  .hint{font-size:10.5px;color:var(--muted-soft);letter-spacing:.5px;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+  .hint kbd{
+    background:rgba(255,255,255,.04);border:1px solid var(--border);border-bottom-width:2px;
+    border-radius:4px;padding:2px 6px;font-size:10px;color:#cfcfcf;font-family:'JetBrains Mono',monospace;margin:0 2px;
+  }
+
+  /* ===== Validation ===== */
+  .error{color:#ff6b6b;font-size:12px;margin-top:10px;display:none;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+  .error.show{display:block;animation:shake .35s}
+  .error::before{content:"// "}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-4px)}
+    75%{transform:translateX(4px)}
+  }
+
+  /* ===== Final ===== */
+  .final{text-align:center;padding:40px 0 20px}
+  .check{
+    width:76px;height:76px;border-radius:50%;
+    background:rgba(255,255,255,.04);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 26px;
+    position:relative;
+  }
+  .check::before{
+    content:"";position:absolute;inset:-1px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.25);
+    animation:ring 2.4s ease-out infinite;
+  }
+  @keyframes ring{
+    0%{transform:scale(1);opacity:.6}
+    100%{transform:scale(1.45);opacity:0}
+  }
+  .check svg{width:36px;height:36px;color:#fff;position:relative;z-index:1}
+
+  .final h2{
+    font-size:32px;font-weight:800;margin:0 0 12px;letter-spacing:-.5px;color:#fff;
+  }
+  .final p{color:#cfcfcf;font-size:15px;line-height:1.6;margin:0 auto 8px;max-width:520px}
+  .summary{
+    margin:38px auto 0;max-width:580px;text-align:left;
+    background:var(--chip-bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:24px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .summary h3{
+    font-size:11px;color:var(--muted);font-weight:600;letter-spacing:2px;
+    text-transform:uppercase;margin:0 0 16px;font-family:'JetBrains Mono',monospace;
+  }
+  .summary h3::before{content:"> "}
+  .summary dl{margin:0;display:grid;grid-template-columns:1fr;gap:14px}
+  .summary dt{
+    font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+    font-weight:600;margin:0 0 4px;font-family:'JetBrains Mono',monospace;
+  }
+  .summary dd{margin:0;font-size:14px;color:#fff;line-height:1.5}
+  .restart{
+    background:transparent;color:var(--muted);
+    border:1px solid var(--border);
+    padding:11px 20px;border-radius:var(--radius);font-size:11px;font-weight:600;
+    cursor:pointer;margin-top:26px;letter-spacing:1px;font-family:'JetBrains Mono',monospace;
+    text-transform:uppercase;
+    transition:all .22s var(--t);
+  }
+  .restart:hover{color:#fff;border-color:var(--border-hover)}
+
+  /* ===== Mobile ===== */
+  @media (max-width:560px){
+    .topbar-inner{padding:14px 18px}
+    main{padding:32px 16px 60px}
+    .intro h1{font-size:30px}
+    .intro p{font-size:14.5px}
+    .question-label{font-size:19px}
+    .option{padding:13px 14px;font-size:13.5px}
+    .hint{display:none}
+    .progress-text .of{display:none}
+    .bg-grid{background-size:48px 48px}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-noise"></div>
+
+<!-- Hidden static form for Netlify Forms detection (drag-and-drop deploys) -->
+<form method='POST' name='aplicacao-mentoria' style='position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;padding:0;margin:0'>
+  <input type="hidden" name="form-name" value="aplicacao-mentoria" />
+  <input type="text" name="nome" />
+  <input type="tel"  name="whatsapp" />
+  <input type="text" name="instagram" />
+  <textarea name="fonte_renda"></textarea>
+  <textarea name="motivo"></textarea>
+  <input type="text" name="notebook" />
+  <input type="text" name="experiencia_venda" />
+  <input type="text" name="faturamento" />
+  <input type="text" name="valor_investir" />
+  <input type="text" name="forma_pagamento" />
+  <input type="text" name="disponibilidade" />
+  <input type="text" name="data_envio" />
+  <input type="text" name="bot-field" />
+</form>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo" aria-label="GOAT Exclusive Club">
+      <div class="row">GOAT <span class="badge">11:16-17</span></div>
+      <div class="sub">EXCLUSIVE CLUB</div>
+    </div>
+    <div class="progress-wrap" id="progressWrap" style="visibility:hidden">
+      <div class="progress-text"><span class="now" id="progressNow">01</span><span class="of"> / 11</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="stage" id="stage">
+
+    <!-- Intro -->
+    <section class="step intro active" data-step="0">
+      <div class="tag"><span class="pulse"></span> APLICAÇÃO · VAGAS LIMITADAS</div>
+      <h1>APLICAÇÃO PARA MENTORIA<br>EDUARDO CHIMAIDA</h1>
+      <p><strong>Construí um SaaS de logística que faturou R$1.000.000+</strong> de forma 100% orgânica — sem investir 1 centavo em tráfego pago.</p>
+      <p>Atraí mais de 10.000 pessoas pro SaaS organicamente. Hoje eu e minha equipe rodamos essa operação ativa todos os dias.</p>
+      <p>Abro vagas limitadas pra mentoria 1:1 onde eu te coloco operando o MESMO método que validou R$1M DE FATURAMENTO pra mim e minha equipe.</p>
+      <p class="filter">Esse formulário é filtro. Vou ler pessoalmente cada resposta. Sem rodeio aqui dentro.</p>
+      <div class="actions">
+        <button class="btn" data-next>INICIAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">pressione <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 1. Notebook/PC -->
+    <section class="step" data-step="1" data-name="notebook">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">01</span> VOCÊ TEM NOTEBOOK/PC PRA TRABALHAR NA OPERAÇÃO?<span class="required">*</span></h2>
+      <div class="options" data-type="choice">
+        <button class="option" data-value="SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM"><span class="key">A</span><span class="label">SIM, TENHO NOTEBOOK/PC FUNCIONANDO BEM</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="TENHO MAS TÁ MEIO VELHO/LENTO"><span class="key">B</span><span class="label">TENHO MAS TÁ MEIO VELHO/LENTO</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="TENHO SÓ CELULAR"><span class="key">C</span><span class="label">TENHO SÓ CELULAR</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="NÃO TENHO"><span class="key">D</span><span class="label">NÃO TENHO</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+      <div class="error">escolha uma opção pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next disabled>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">aperte <kbd>A</kbd>–<kbd>D</kbd> ou <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 2. O que faz pra ganhar dinheiro -->
+    <section class="step" data-step="2" data-name="fonte_renda">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">02</span> O QUE VOCÊ FAZ HOJE PRA GANHAR DINHEIRO?<span class="required">*</span></h2>
+      <div class="field"><textarea class="textarea" data-input placeholder="Conta brevemente o que você faz hoje (CLT, autônomo, negócio próprio, etc.)"></textarea></div>
+      <div class="error">preenche esse campo pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> pra confirmar</span>
+      </div>
+    </section>
+
+    <!-- 3. Lançamento ou venda ao vivo -->
+    <section class="step" data-step="3" data-name="experiencia_venda">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">03</span> JÁ FEZ ALGUM LANÇAMENTO OU VENDA AO VIVO?<span class="required">*</span></h2>
+      <div class="options" data-type="choice">
+        <button class="option" data-value="SIM, JÁ FIZ LANÇAMENTO COMPLETO (com aquecimento e abertura de carrinho)"><span class="key">A</span><span class="label">SIM, JÁ FIZ LANÇAMENTO COMPLETO (com aquecimento e abertura de carrinho)</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="JÁ FIZ LIVE OU WEBINAR DE VENDA (apresentei produto ao vivo e vendi)"><span class="key">B</span><span class="label">JÁ FIZ LIVE OU WEBINAR DE VENDA (apresentei produto ao vivo e vendi)</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="JÁ VENDI ALGO ONLINE, MAS NUNCA AO VIVO (página de vendas, DM, grupo, VSL)"><span class="key">C</span><span class="label">JÁ VENDI ALGO ONLINE, MAS NUNCA AO VIVO (página de vendas, DM, grupo, VSL)</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="AINDA NÃO VENDI NADA ONLINE (tô começando do zero ou já tentei sem resultado)"><span class="key">D</span><span class="label">AINDA NÃO VENDI NADA ONLINE (tô começando do zero ou já tentei sem resultado)</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+      <div class="error">escolha uma opção pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next disabled>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">aperte <kbd>A</kbd>–<kbd>D</kbd> ou <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 4. Faturamento mensal -->
+    <section class="step" data-step="4" data-name="faturamento">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">04</span> QUAL SEU FATURAMENTO MENSAL MÉDIO HOJE?<span class="required">*</span></h2>
+      <div class="options" data-type="choice">
+        <button class="option" data-value="NÃO TÔ FATURANDO AINDA"><span class="key">A</span><span class="label">NÃO TÔ FATURANDO AINDA</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="ATÉ R$ 2.000"><span class="key">B</span><span class="label">ATÉ R$ 2.000</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="R$ 2.000 A R$ 5.000"><span class="key">C</span><span class="label">R$ 2.000 A R$ 5.000</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="R$ 10.000 A R$ 20.000"><span class="key">D</span><span class="label">R$ 10.000 A R$ 20.000</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="ACIMA DE R$ 20.000"><span class="key">E</span><span class="label">ACIMA DE R$ 20.000</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+      <div class="error">escolha uma opção pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next disabled>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">aperte <kbd>A</kbd>–<kbd>E</kbd> ou <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 5. Quanto tem disponível -->
+    <section class="step" data-step="5" data-name="valor_investir">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">05</span> QUANTO VOCÊ TEM DISPONÍVEL EM CONTA HOJE PARA INVESTIR?<span class="required">*</span></h2>
+      <div class="helper">Seja real. Se inflar, te mando a oferta errada e tu perde tempo.<br>Se diminuir, perde a oferta certa pra ti.</div>
+      <div class="field"><input class="input number" data-input type="text" inputmode="numeric" placeholder="R$ 0" /></div>
+      <div class="error">informa um valor pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">pressione <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 6. Como paga -->
+    <section class="step" data-step="6" data-name="forma_pagamento">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">06</span> ESSE VALOR QUE VOCÊ COLOCOU ACIMA, TU CONSEGUE PAGAR DE QUAL FORMA?<span class="required">*</span></h2>
+      <div class="options" data-type="choice">
+        <button class="option" data-value="TENHO DISPONÍVEL À VISTA NO PIX"><span class="key">A</span><span class="label">TENHO DISPONÍVEL À VISTA NO PIX</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="TENHO DISPONÍVEL PARCELADO NO CARTÃO (ATÉ 12X)"><span class="key">B</span><span class="label">TENHO DISPONÍVEL PARCELADO NO CARTÃO (ATÉ 12X)</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="TENHO MAS DEMORA ATÉ 30 DIAS PRA LIBERAR"><span class="key">C</span><span class="label">TENHO MAS DEMORA ATÉ 30 DIAS PRA LIBERAR</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="TÔ LEVANTANDO AINDA, SEM PRAZO CERTO"><span class="key">D</span><span class="label">TÔ LEVANTANDO AINDA, SEM PRAZO CERTO</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="COLOQUEI UM VALOR MAS NÃO TENHO DE FATO PARA INVESTIR"><span class="key">E</span><span class="label">COLOQUEI UM VALOR MAS NÃO TENHO DE FATO PARA INVESTIR</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+      <div class="error">escolha uma opção pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next disabled>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">aperte <kbd>A</kbd>–<kbd>E</kbd> ou <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 7. Disponibilidade -->
+    <section class="step" data-step="7" data-name="disponibilidade">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">07</span> QUAL SUA DISPONIBILIDADE PARA OS LANÇAMENTOS TODOS OS DIAS?<span class="required">*</span></h2>
+      <div class="options" data-type="choice">
+        <button class="option" data-value="ATÉ 1 HORA"><span class="key">A</span><span class="label">ATÉ 1 HORA</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="1 HORA A 3 HORAS"><span class="key">B</span><span class="label">1 HORA A 3 HORAS</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="3 HORAS A 6 HORAS"><span class="key">C</span><span class="label">3 HORAS A 6 HORAS</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="option" data-value="+ 6 HORAS"><span class="key">D</span><span class="label">+ 6 HORAS</span><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      </div>
+      <div class="error">escolha uma opção pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next disabled>CONFIRMAR <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">aperte <kbd>A</kbd>–<kbd>D</kbd> ou <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 8. Por que -->
+    <section class="step" data-step="8" data-name="motivo">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">08</span> POR QUE VOCÊ QUER TRABALHAR COMIGO?<span class="required">*</span></h2>
+      <div class="field"><textarea class="textarea" data-input placeholder="Sem rodeio. Conta o que te move pra entrar nessa mentoria."></textarea></div>
+      <div class="error">preenche esse campo pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next>PRÓXIMO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> pra confirmar</span>
+      </div>
+    </section>
+
+    <!-- 9. Nome -->
+    <section class="step" data-step="9" data-name="nome">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">09</span> QUAL SEU NOME COMPLETO?<span class="required">*</span></h2>
+      <div class="field"><input class="input short" data-input type="text" placeholder="Nome completo" autocomplete="name" /></div>
+      <div class="error">preenche seu nome pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next>PRÓXIMO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">pressione <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 10. WhatsApp -->
+    <section class="step" data-step="10" data-name="whatsapp">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">10</span> QUAL SEU NÚMERO PARA CONTATO WHATSAPP?<span class="required">*</span></h2>
+      <div class="phone-row">
+        <span class="phone-cc"><span class="flag">🇧🇷</span> +55</span>
+        <input class="input" data-input type="tel" placeholder="(00) 00000-0000" autocomplete="tel-national" />
+      </div>
+      <div class="error">informa seu número pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next>PRÓXIMO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">pressione <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- 11. Instagram -->
+    <section class="step" data-step="11" data-name="instagram">
+      <button class="back" data-back><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> VOLTAR</button>
+      <h2 class="question-label"><span class="question-num">11</span> QUAL SEU INSTAGRAM?<span class="required">*</span></h2>
+      <div class="field"><input class="input short" data-input type="text" placeholder="@seuusuario" /></div>
+      <div class="error">informa seu Instagram pra continuar</div>
+      <div class="actions">
+        <button class="btn" data-next>ENVIAR APLICAÇÃO <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        <span class="hint">pressione <kbd>Enter</kbd></span>
+      </div>
+    </section>
+
+    <!-- Final -->
+    <section class="step final" data-step="12">
+      <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>APLICAÇÃO ENVIADA</h2>
+      <p>Recebi sua aplicação. Vou ler pessoalmente.</p>
+      <p>Se faz fit com o perfil que procuro, meu time entra em contato pelo WhatsApp que você cadastrou.</p>
+      <div class="summary">
+        <h3>RESUMO DAS RESPOSTAS</h3>
+        <dl id="summaryList"></dl>
+      </div>
+      <button class="restart" id="restartBtn">PREENCHER NOVAMENTE</button>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(() => {
+  const steps = Array.from(document.querySelectorAll('.step'));
+  const totalQuestions = steps.length - 2;
+  const progressWrap = document.getElementById('progressWrap');
+  const progressNow = document.getElementById('progressNow');
+  const progressFill = document.getElementById('progressFill');
+  const summaryList = document.getElementById('summaryList');
+  const restartBtn = document.getElementById('restartBtn');
+  let current = 0;
+  const answers = {};
+
+  const pad2 = n => String(n).padStart(2,'0');
+
+  function show(idx){
+    if(idx < 0 || idx >= steps.length) return;
+    steps[current].classList.remove('active');
+    current = idx;
+    const step = steps[current];
+    void step.offsetWidth;
+    step.classList.add('active');
+
+    if(current === 0 || current === steps.length - 1){
+      progressWrap.style.visibility = 'hidden';
+    } else {
+      progressWrap.style.visibility = 'visible';
+      progressNow.textContent = pad2(current);
+      progressFill.style.width = `${(current / totalQuestions) * 100}%`;
+    }
+
+    setTimeout(() => {
+      const input = step.querySelector('[data-input]');
+      if(input) input.focus({preventScroll:true});
+    }, 120);
+
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function validate(step){
+    const name = step.dataset.name;
+    const choice = step.querySelector('.options');
+    const input = step.querySelector('[data-input]');
+    const err = step.querySelector('.error');
+    if(err) err.classList.remove('show');
+
+    if(choice){
+      const sel = choice.querySelector('.option.selected');
+      if(!sel){ err && err.classList.add('show'); return false; }
+      answers[name] = sel.dataset.value;
+      return true;
+    }
+    if(input){
+      const val = input.value.trim();
+      if(!val){ err && err.classList.add('show'); return false; }
+      answers[name] = val;
+      return true;
+    }
+    return true;
+  }
+
+  async function submitToNetlify(){
+    const payload = {
+      'form-name':'aplicacao-mentoria',
+      'data_envio': new Date().toISOString(),
+      'bot-field':'',
+      ...answers
+    };
+    const body = new URLSearchParams(payload).toString();
+    console.log('[Form] enviando payload:', payload);
+    const res = await fetch('/', {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body
+    });
+    console.log('[Form] resposta:', res.status, res.statusText, 'url:', res.url);
+    if(!res.ok){
+      const text = await res.text().catch(() => '');
+      console.error('[Form] body retornado:', text.slice(0, 500));
+      throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+    }
+  }
+
+  async function next(){
+    const step = steps[current];
+    if(current === 0){ show(1); return; }
+    if(current === steps.length - 1){ return; }
+    if(!validate(step)) return;
+    if(current === steps.length - 2){
+      // Final step: submit then show thank-you
+      const btn = step.querySelector('[data-next]');
+      const err = step.querySelector('.error');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'ENVIANDO… <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity=".25"/><path d="M21 12a9 9 0 0 1-9 9"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>';
+      try{
+        await submitToNetlify();
+        renderSummary();
+        show(steps.length - 1);
+      } catch(e){
+        console.error('Erro ao enviar:', e);
+        if(err){
+          err.textContent = 'erro ao enviar — tenta de novo em alguns segundos';
+          err.classList.add('show');
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
+      return;
+    }
+    show(current + 1);
+  }
+
+  function back(){
+    if(current === 0) return;
+    show(current - 1);
+  }
+
+  function renderSummary(){
+    const labelMap = {
+      notebook:'NOTEBOOK / PC',
+      fonte_renda:'FONTE DE RENDA HOJE',
+      experiencia_venda:'EXPERIÊNCIA EM VENDA',
+      faturamento:'FATURAMENTO MENSAL',
+      valor_investir:'DISPONÍVEL PRA INVESTIR',
+      forma_pagamento:'FORMA DE PAGAMENTO',
+      disponibilidade:'DISPONIBILIDADE DIÁRIA',
+      motivo:'MOTIVO',
+      nome:'NOME',
+      whatsapp:'WHATSAPP',
+      instagram:'INSTAGRAM'
+    };
+    summaryList.innerHTML = '';
+    Object.keys(labelMap).forEach(k => {
+      if(!answers[k]) return;
+      const dt = document.createElement('dt');
+      dt.textContent = labelMap[k];
+      const dd = document.createElement('dd');
+      let val = answers[k];
+      if(k === 'whatsapp') val = '+55 ' + val;
+      dd.textContent = val;
+      summaryList.appendChild(dt);
+      summaryList.appendChild(dd);
+    });
+  }
+
+  // Wire interactions
+  steps.forEach(step => {
+    step.querySelectorAll('[data-next]').forEach(b => b.addEventListener('click', next));
+    step.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', back));
+    const choice = step.querySelector('.options');
+    if(choice){
+      const opts = Array.from(choice.querySelectorAll('.option'));
+      const nextBtn = step.querySelector('[data-next]');
+      opts.forEach(opt => {
+        opt.addEventListener('click', () => {
+          opts.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          if(nextBtn) nextBtn.disabled = false;
+          const err = step.querySelector('.error');
+          if(err) err.classList.remove('show');
+        });
+      });
+    }
+    const input = step.querySelector('[data-input]');
+    if(input){
+      input.addEventListener('input', () => {
+        const err = step.querySelector('.error');
+        if(err) err.classList.remove('show');
+      });
+    }
+  });
+
+  // Phone formatter
+  const phoneInput = document.querySelector('[data-step="10"] [data-input]');
+  if(phoneInput){
+    phoneInput.addEventListener('input', () => {
+      let v = phoneInput.value.replace(/\D/g,'').slice(0,11);
+      let out = '';
+      if(v.length > 0) out = '(' + v.slice(0,2);
+      if(v.length >= 3) out += ') ' + v.slice(2, v.length > 10 ? 7 : 6);
+      if(v.length > 6 && v.length <= 10) out += '-' + v.slice(6);
+      if(v.length > 10) out += '-' + v.slice(7);
+      phoneInput.value = out;
+    });
+  }
+
+  // Money formatter
+  const moneyInput = document.querySelector('[data-step="5"] [data-input]');
+  if(moneyInput){
+    moneyInput.addEventListener('input', () => {
+      const raw = moneyInput.value.replace(/\D/g,'');
+      if(!raw){ moneyInput.value = ''; return; }
+      moneyInput.value = 'R$ ' + Number(raw).toLocaleString('pt-BR');
+    });
+  }
+
+  // Instagram normalizer
+  const igInput = document.querySelector('[data-step="11"] [data-input]');
+  if(igInput){
+    igInput.addEventListener('blur', () => {
+      let v = igInput.value.trim();
+      if(v && !v.startsWith('@')) v = '@' + v.replace(/^.*instagram\.com\//,'').replace(/\/$/,'');
+      igInput.value = v;
+    });
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    const step = steps[current];
+    if(!step) return;
+
+    const choice = step.querySelector('.options');
+    if(choice && /^[a-eA-E]$/.test(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey){
+      const idx = e.key.toUpperCase().charCodeAt(0) - 65;
+      const opts = choice.querySelectorAll('.option');
+      if(opts[idx]){
+        e.preventDefault();
+        opts[idx].click();
+        return;
+      }
+    }
+
+    if(e.key === 'Enter'){
+      const isTextarea = e.target.tagName === 'TEXTAREA';
+      if(isTextarea && !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      next();
+    }
+    if(e.key === 'Escape'){
+      back();
+    }
+  });
+
+  restartBtn.addEventListener('click', () => {
+    Object.keys(answers).forEach(k => delete answers[k]);
+    steps.forEach(s => {
+      s.querySelectorAll('.option.selected').forEach(o => o.classList.remove('selected'));
+      s.querySelectorAll('[data-input]').forEach(i => i.value = '');
+      s.querySelectorAll('[data-next]').forEach(b => {
+        if(s.querySelector('.options')) b.disabled = true;
+      });
+    });
+    show(0);
+  });
+})();
+</script>
+</body>
+</html>
